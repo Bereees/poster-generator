@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Poster Generator</title>
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <aside class="controls">
+        <h1>Poster Generator</h1>
+
+        <section>
+          <h2>Categorie</h2>
+          <div id="categories" class="checkbox-group"></div>
+        </section>
+
+        <section>
+          <h2>Formato</h2>
+          <div id="formats" class="radio-group"></div>
+        </section>
+
+        <section>
+          <h2>Sfondo</h2>
+          <input type="color" id="background" value="#ffffff" />
+        </section>
+
+        <section>
+          <h2>Descrizione</h2>
+          <textarea id="description" rows="3" placeholder="Testo libero (opzionale)"></textarea>
+        </section>
+
+        <div class="actions">
+          <button id="generate" disabled>Genera</button>
+          <button id="regenerate" disabled>Rigenera</button>
+        </div>
+
+        <section>
+          <h2>Esporta</h2>
+          <div class="export-group">
+            <button id="export-png" disabled>PNG</button>
+            <button id="export-jpg" disabled>JPG</button>
+            <button id="export-pdf" disabled>PDF</button>
+          </div>
+        </section>
+      </aside>
+
+      <main class="preview-panel">
+        <div class="preview-frame">
+          <canvas id="preview"></canvas>
+        </div>
+      </main>
+    </div>
+    <script type="module" src="js/main.js"></script>
+  </body>
+</html>
