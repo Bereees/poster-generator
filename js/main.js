@@ -12,7 +12,9 @@ const state = {
   selectedCategories: new Set(),
   backgroundColor: '#ffffff',
   description: '',
+  randomRotation: false,
   imageSrcs: [],
+  imageRotations: [],
   hasGenerated: false,
 };
 
@@ -25,6 +27,7 @@ const els = {
   gridSelection: document.getElementById('grid-selection'),
   background: document.getElementById('background'),
   description: document.getElementById('description'),
+  randomRotation: document.getElementById('random-rotation'),
   generate: document.getElementById('generate'),
   regenerate: document.getElementById('regenerate'),
   exportPng: document.getElementById('export-png'),
@@ -129,12 +132,16 @@ async function generatePoster() {
   const pool = buildImagePool(state.manifest, [...state.selectedCategories]);
   const count = getCellCount(state.gridId);
   state.imageSrcs = sampleImages(pool, count);
+  state.imageRotations = state.randomRotation
+    ? state.imageSrcs.map(() => Math.random() * Math.PI * 2)
+    : state.imageSrcs.map(() => 0);
   const layout = computeLayout(format);
 
   await renderPoster(els.preview, format, layout, state.imageSrcs, {
     backgroundColor: state.backgroundColor,
     description: state.description,
     logoSrc: state.manifest.logo,
+    rotations: state.imageRotations,
   });
 
   state.hasGenerated = true;
@@ -155,6 +162,9 @@ async function init() {
   });
   els.description.addEventListener('input', (e) => {
     state.description = e.target.value;
+  });
+  els.randomRotation.addEventListener('change', (e) => {
+    state.randomRotation = e.target.checked;
   });
   els.generate.addEventListener('click', generatePoster);
   els.regenerate.addEventListener('click', generatePoster);

@@ -18,16 +18,42 @@ export function loadImage(src) {
   return promise;
 }
 
-function drawContainedImage(ctx, img, cell, bgColor) {
+function getRotatedContainScale(img, cellWidth, cellHeight, rotation) {
+  const cos = Math.abs(Math.cos(rotation));
+  const sin = Math.abs(Math.sin(rotation));
+  const boundW = img.width * cos + img.height * sin;
+  const boundH = img.width * sin + img.height * cos;
+  return Math.min(cellWidth / boundW, cellHeight / boundH);
+}
+
+function drawContainedImage(ctx, img, cell, bgColor, rotation = 0) {
   ctx.fillStyle = bgColor;
   ctx.fillRect(cell.x, cell.y, cell.width, cell.height);
 
-  const scale = Math.min(cell.width / img.width, cell.height / img.height);
+  if (!rotation) {
+    const scale = Math.min(cell.width / img.width, cell.height / img.height);
+    const w = img.width * scale;
+    const h = img.height * scale;
+    const x = cell.x + (cell.width - w) / 2;
+    const y = cell.y + (cell.height - h) / 2;
+    ctx.drawImage(img, x, y, w, h);
+    return;
+  }
+
+  const cx = cell.x + cell.width / 2;
+  const cy = cell.y + cell.height / 2;
+  const scale = getRotatedContainScale(img, cell.width, cell.height, rotation);
   const w = img.width * scale;
   const h = img.height * scale;
-  const x = cell.x + (cell.width - w) / 2;
-  const y = cell.y + (cell.height - h) / 2;
-  ctx.drawImage(img, x, y, w, h);
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(cell.x, cell.y, cell.width, cell.height);
+  ctx.clip();
+  ctx.translate(cx, cy);
+  ctx.rotate(rotation);
+  ctx.drawImage(img, -w / 2, -h / 2, w, h);
+  ctx.restore();
 }
 
 async function drawFooter(ctx, layout, { description, logoSrc }) {
@@ -53,7 +79,7 @@ async function drawFooter(ctx, layout, { description, logoSrc }) {
 }
 
 export async function renderPoster(canvas, format, layout, imageSrcs, options) {
-  const { backgroundColor, description, logoSrc } = options;
+  const { backgroundColor, description, logoSrc, rotations = [] } = options;
   canvas.width = format.widthPx;
   canvas.height = format.heightPx;
 
@@ -63,7 +89,7 @@ export async function renderPoster(canvas, format, layout, imageSrcs, options) {
 
   const images = await Promise.all(imageSrcs.map(loadImage));
   layout.cells.forEach((cell, i) => {
-    if (images[i]) drawContainedImage(ctx, images[i], cell, backgroundColor);
+    if (images[i]) drawContainedImage(ctx, images[i], cell, backgroundColor, rotations[i] ?? 0);
   });
 
   await drawFooter(ctx, layout, { description, logoSrc });
