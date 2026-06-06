@@ -40,6 +40,74 @@ body {
   margin-bottom: 0.5rem;
 }
 
+.collapsible-section {
+  margin: 0;
+}
+
+.collapsible {
+  border: 1px solid #e5e5e5;
+}
+
+.collapsible summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.65rem 0.75rem;
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+}
+
+.collapsible summary::-webkit-details-marker {
+  display: none;
+}
+
+.collapsible-heading {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #666;
+}
+
+.collapsible-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-left: auto;
+}
+
+.collapsible-value {
+  font-size: 0.9rem;
+  color: #1a1a1a;
+  max-width: 9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.collapsible summary::after {
+  content: '';
+  width: 0.45rem;
+  height: 0.45rem;
+  border-right: 1.5px solid #666;
+  border-bottom: 1.5px solid #666;
+  transform: rotate(45deg);
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+}
+
+.collapsible[open] summary::after {
+  transform: rotate(-135deg);
+}
+
+.collapsible .checkbox-group,
+.collapsible .radio-group {
+  padding: 0.75rem;
+  border-top: 1px solid #f0f0f0;
+}
+
 .checkbox-group,
 .radio-group {
   display: flex;

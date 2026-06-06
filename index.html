@@ -17,14 +17,40 @@
       <aside class="controls">
         <h1>Poster Generator</h1>
 
-        <section>
-          <h2>Categorie</h2>
-          <div id="categories" class="checkbox-group"></div>
+        <section class="collapsible-section">
+          <details id="categories-menu" class="collapsible">
+            <summary>
+              <span class="collapsible-heading">Categorie</span>
+              <span class="collapsible-meta">
+                <span id="categories-selection" class="collapsible-value">Nessuna</span>
+              </span>
+            </summary>
+            <div id="categories" class="checkbox-group"></div>
+          </details>
         </section>
 
-        <section>
-          <h2>Formato</h2>
-          <div id="formats" class="radio-group"></div>
+        <section class="collapsible-section">
+          <details id="format-menu" class="collapsible">
+            <summary>
+              <span class="collapsible-heading">Formato</span>
+              <span class="collapsible-meta">
+                <span id="format-selection" class="collapsible-value">A4 ↕</span>
+              </span>
+            </summary>
+            <div id="formats" class="radio-group"></div>
+          </details>
+        </section>
+
+        <section class="collapsible-section">
+          <details id="grid-menu" class="collapsible">
+            <summary>
+              <span class="collapsible-heading">Griglia</span>
+              <span class="collapsible-meta">
+                <span id="grid-selection" class="collapsible-value">5 × 7</span>
+              </span>
+            </summary>
+            <div id="grids" class="radio-group"></div>
+          </details>
         </section>
 
         <section>

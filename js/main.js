@@ -1,4 +1,5 @@
-import { FORMATS, getFormat, getCellCount } from './formats.js';
+import { FORMATS, getFormat } from './formats.js';
+import { GRIDS, getGrid, getCellCount } from './grids.js';
 import { buildImagePool, sampleImages } from './sampler.js';
 import { computeLayout } from './layout.js';
 import { renderPoster } from './renderer.js';
@@ -7,6 +8,7 @@ import { downloadPng, downloadJpg, downloadPdf } from './export.js';
 const state = {
   manifest: null,
   formatId: 'a4-verticale',
+  gridId: '5x7',
   selectedCategories: new Set(),
   backgroundColor: '#ffffff',
   description: '',
@@ -16,7 +18,11 @@ const state = {
 
 const els = {
   categories: document.getElementById('categories'),
+  categoriesSelection: document.getElementById('categories-selection'),
   formats: document.getElementById('formats'),
+  formatSelection: document.getElementById('format-selection'),
+  grids: document.getElementById('grids'),
+  gridSelection: document.getElementById('grid-selection'),
   background: document.getElementById('background'),
   description: document.getElementById('description'),
   generate: document.getElementById('generate'),
@@ -36,6 +42,22 @@ function updateButtons() {
   els.exportPdf.disabled = !state.hasGenerated;
 }
 
+function updateCategoriesSummary() {
+  if (!state.selectedCategories.size) {
+    els.categoriesSelection.textContent = 'Nessuna';
+    return;
+  }
+
+  const labels = state.manifest.categories
+    .filter((cat) => state.selectedCategories.has(cat.id))
+    .map((cat) => cat.label);
+  els.categoriesSelection.textContent = labels.join(', ');
+}
+
+function updateFormatSummary() {
+  els.formatSelection.textContent = getFormat(state.formatId).label;
+}
+
 function renderCategoryControls() {
   els.categories.innerHTML = '';
   for (const cat of state.manifest.categories) {
@@ -50,12 +72,14 @@ function renderCategoryControls() {
     input.addEventListener('change', () => {
       if (input.checked) state.selectedCategories.add(cat.id);
       else state.selectedCategories.delete(cat.id);
+      updateCategoriesSummary();
       updateButtons();
     });
 
     label.append(input, document.createTextNode(empty ? `${cat.label} (vuota)` : cat.label));
     els.categories.append(label);
   }
+  updateCategoriesSummary();
 }
 
 function renderFormatControls() {
@@ -69,16 +93,41 @@ function renderFormatControls() {
     input.checked = id === state.formatId;
     input.addEventListener('change', () => {
       state.formatId = id;
+      updateFormatSummary();
     });
     label.append(input, document.createTextNode(fmt.label));
     els.formats.append(label);
   }
+  updateFormatSummary();
+}
+
+function updateGridSummary() {
+  els.gridSelection.textContent = getGrid(state.gridId).label;
+}
+
+function renderGridControls() {
+  els.grids.innerHTML = '';
+  for (const [id, grid] of Object.entries(GRIDS)) {
+    const label = document.createElement('label');
+    const input = document.createElement('input');
+    input.type = 'radio';
+    input.name = 'grid';
+    input.value = id;
+    input.checked = id === state.gridId;
+    input.addEventListener('change', () => {
+      state.gridId = id;
+      updateGridSummary();
+    });
+    label.append(input, document.createTextNode(grid.label));
+    els.grids.append(label);
+  }
+  updateGridSummary();
 }
 
 async function generatePoster() {
-  const format = getFormat(state.formatId);
+  const format = { ...getFormat(state.formatId), grid: getGrid(state.gridId) };
   const pool = buildImagePool(state.manifest, [...state.selectedCategories]);
-  const count = getCellCount(state.formatId);
+  const count = getCellCount(state.gridId);
   state.imageSrcs = sampleImages(pool, count);
   const layout = computeLayout(format);
 
@@ -99,6 +148,7 @@ async function init() {
 
   renderCategoryControls();
   renderFormatControls();
+  renderGridControls();
 
   els.background.addEventListener('input', (e) => {
     state.backgroundColor = e.target.value;
