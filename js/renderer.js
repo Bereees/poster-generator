@@ -18,22 +18,15 @@ export function loadImage(src) {
   return promise;
 }
 
-function getRotatedContainScale(img, cellWidth, cellHeight, rotation) {
-  const cos = Math.abs(Math.cos(rotation));
-  const sin = Math.abs(Math.sin(rotation));
-  const boundW = img.width * cos + img.height * sin;
-  const boundH = img.width * sin + img.height * cos;
-  return Math.min(cellWidth / boundW, cellHeight / boundH);
-}
-
 function drawContainedImage(ctx, img, cell, bgColor, rotation = 0) {
   ctx.fillStyle = bgColor;
   ctx.fillRect(cell.x, cell.y, cell.width, cell.height);
 
+  const scale = Math.min(cell.width / img.width, cell.height / img.height);
+  const w = img.width * scale;
+  const h = img.height * scale;
+
   if (!rotation) {
-    const scale = Math.min(cell.width / img.width, cell.height / img.height);
-    const w = img.width * scale;
-    const h = img.height * scale;
     const x = cell.x + (cell.width - w) / 2;
     const y = cell.y + (cell.height - h) / 2;
     ctx.drawImage(img, x, y, w, h);
@@ -42,9 +35,6 @@ function drawContainedImage(ctx, img, cell, bgColor, rotation = 0) {
 
   const cx = cell.x + cell.width / 2;
   const cy = cell.y + cell.height / 2;
-  const scale = getRotatedContainScale(img, cell.width, cell.height, rotation);
-  const w = img.width * scale;
-  const h = img.height * scale;
 
   ctx.save();
   ctx.beginPath();

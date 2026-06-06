@@ -1,7 +1,7 @@
 const MARGIN_SIDE_RATIO = 0.05;
 const MARGIN_TOP_RATIO = 0.05;
 const MARGIN_BOTTOM_RATIO = 0.12;
-const GAP_RATIO = 0.012;
+const GAP_PX = 2;
 
 export function computeLayout(format) {
   const { widthPx: W, heightPx: H, grid } = format;
@@ -28,7 +28,7 @@ export function computeLayout(format) {
     height: footer.y - margin.top,
   };
 
-  const gap = Math.round(gridArea.width * GAP_RATIO);
+  const gap = GAP_PX;
   const cellWidth = Math.floor((gridArea.width - gap * (grid.cols - 1)) / grid.cols);
   const cellHeight = Math.floor((gridArea.height - gap * (grid.rows - 1)) / grid.rows);
 
