@@ -44,6 +44,9 @@ export function computeLayout(format) {
     }
   }
 
+  const isVertical = H > W;
+  const logoHeightRatio = isVertical ? 0.58 : 0.65;
+
   return {
     width: W,
     height: H,
@@ -53,12 +56,12 @@ export function computeLayout(format) {
     footer,
     cells,
     logo: {
-      maxHeight: Math.round(footerHeight * 0.55),
+      maxHeight: Math.round(footerHeight * logoHeightRatio),
       paddingRight: Math.round(margin.right * 0.5),
-      paddingBottom: Math.round(footerHeight * 0.15),
+      paddingBottom: Math.round(footerHeight * 0.22),
     },
     description: {
-      paddingBottom: Math.round(footerHeight * 0.2),
+      paddingBottom: Math.round(footerHeight * 0.24),
       fontSize: Math.round(footerHeight * 0.22),
       maxWidth: Math.round(footer.width * 0.6),
     },
