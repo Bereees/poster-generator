@@ -1,4 +1,10 @@
 const imageCache = new Map();
+const POSTER_FONT = 'Roboto';
+
+async function ensurePosterFont(fontSize) {
+  if (!document.fonts) return;
+  await document.fonts.load(`500 ${fontSize}px ${POSTER_FONT}`);
+}
 
 export function loadImage(src) {
   if (imageCache.has(src)) return imageCache.get(src);
@@ -28,8 +34,9 @@ async function drawFooter(ctx, layout, { description, logoSrc }) {
   const { footer, logo, description: descStyle } = layout;
 
   if (description) {
+    await ensurePosterFont(descStyle.fontSize);
     ctx.fillStyle = '#1a1a1a';
-    ctx.font = `${descStyle.fontSize}px sans-serif`;
+    ctx.font = `500 ${descStyle.fontSize}px "${POSTER_FONT}", sans-serif`;
     ctx.textBaseline = 'bottom';
     const textY = footer.y + footer.height - descStyle.paddingBottom;
     ctx.fillText(description, footer.x, textY, descStyle.maxWidth);
