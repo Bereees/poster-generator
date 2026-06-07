@@ -4,6 +4,21 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Poster Generator</title>
+    <script>
+      (function () {
+        if (location.hostname.endsWith('github.io') && location.pathname.includes('/poster-generator')) {
+          var base = document.createElement('base');
+          base.href = '/poster-generator/';
+          document.head.appendChild(base);
+        }
+        try {
+          var theme = localStorage.getItem('ui-theme');
+          if (theme === 'light' || theme === 'dark') {
+            document.documentElement.dataset.theme = theme;
+          }
+        } catch (_) {}
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -16,7 +31,9 @@
     <div class="app">
       <aside class="controls">
         <header class="app-header">
-          <img src="immagini/logo.svg" alt="" class="app-logo" width="36" height="32" />
+          <button type="button" class="logo-toggle" id="theme-toggle" aria-label="Cambia tema scuro/chiaro">
+            <img src="immagini/logo.svg" alt="" class="app-logo" width="36" height="32" />
+          </button>
           <h1>Poster Generator</h1>
         </header>
 

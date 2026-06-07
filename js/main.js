@@ -4,6 +4,7 @@ import { buildImagePool, sampleImages } from './sampler.js';
 import { computeLayout } from './layout.js';
 import { renderPoster } from './renderer.js';
 import { downloadPng, downloadJpg, downloadPdf } from './export.js';
+import { initThemeToggle } from './theme.js';
 
 const state = {
   manifest: null,
@@ -40,6 +41,7 @@ const els = {
   exportJpg: document.getElementById('export-jpg'),
   exportPdf: document.getElementById('export-pdf'),
   preview: document.getElementById('preview'),
+  themeToggle: document.getElementById('theme-toggle'),
 };
 
 function updateButtons() {
@@ -205,6 +207,7 @@ async function init() {
   renderFormatControls();
   renderGridControls();
   initCollapsibles();
+  initThemeToggle(els.themeToggle);
 
   els.background.addEventListener('input', (e) => {
     state.backgroundColor = e.target.value;

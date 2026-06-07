@@ -5,10 +5,29 @@
   --text-muted: #888888;
   --text-placeholder: #666666;
   --btn-primary-bg: #000000;
+  --btn-primary-hover: #111111;
+  --btn-primary-text: #ffffff;
   --btn-secondary-border: rgba(255, 255, 255, 0.45);
   --line: rgba(255, 255, 255, 0.2);
   --hover: rgba(255, 255, 255, 0.06);
   --open: rgba(255, 255, 255, 0.04);
+  --logo-filter: brightness(0) invert(1);
+}
+
+[data-theme='light'] {
+  --sidebar-bg: #ffffff;
+  --preview-bg: #f0efec;
+  --text-primary: #1a1a1a;
+  --text-muted: #888888;
+  --text-placeholder: #999999;
+  --btn-primary-bg: #1a1a1a;
+  --btn-primary-hover: #000000;
+  --btn-primary-text: #ffffff;
+  --btn-secondary-border: rgba(26, 26, 26, 0.35);
+  --line: rgba(26, 26, 26, 0.2);
+  --hover: rgba(26, 26, 26, 0.05);
+  --open: rgba(26, 26, 26, 0.04);
+  --logo-filter: none;
 }
 
 *,
@@ -46,9 +65,24 @@ body {
   gap: 0.75rem;
 }
 
+.logo-toggle {
+  display: flex;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  line-height: 0;
+  flex-shrink: 0;
+}
+
+.logo-toggle:hover {
+  opacity: 0.75;
+}
+
 .app-logo {
   flex-shrink: 0;
-  filter: brightness(0) invert(1);
+  filter: var(--logo-filter);
+  pointer-events: none;
 }
 
 .controls h1 {
@@ -261,11 +295,11 @@ textarea::placeholder {
 
 .btn-primary {
   background: var(--btn-primary-bg);
-  color: var(--text-primary);
+  color: var(--btn-primary-text);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #111111;
+  background: var(--btn-primary-hover);
 }
 
 .btn-secondary {
