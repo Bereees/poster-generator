@@ -1,4 +1,5 @@
 import { getProcessedDrawing } from './imageFilter.js';
+import { resolveFooterColor, isLightFooterColor } from './contrast.js';
 
 const imageCache = new Map();
 const POSTER_FONT = 'Roboto';
@@ -48,12 +49,12 @@ function drawContainedImage(ctx, img, cell, bgColor, rotation = 0) {
   ctx.restore();
 }
 
-async function drawFooter(ctx, layout, { description, logoSrc }) {
+async function drawFooter(ctx, layout, { description, logoSrc, footerColor }) {
   const { footer, logo, description: descStyle } = layout;
 
   if (description) {
     await ensurePosterFont(descStyle.fontSize);
-    ctx.fillStyle = '#1a1a1a';
+    ctx.fillStyle = footerColor;
     ctx.font = `500 ${descStyle.fontSize}px "${POSTER_FONT}", sans-serif`;
     ctx.textBaseline = 'bottom';
     const textY = footer.y + footer.height - descStyle.paddingBottom;
@@ -67,11 +68,24 @@ async function drawFooter(ctx, layout, { description, logoSrc }) {
   const h = logoImg.height * scale;
   const x = footer.x + footer.width - w - logo.paddingRight;
   const y = footer.y + footer.height - h - logo.paddingBottom;
+
+  ctx.save();
+  if (isLightFooterColor(footerColor)) {
+    ctx.filter = 'brightness(0) invert(1)';
+  }
   ctx.drawImage(logoImg, x, y, w, h);
+  ctx.restore();
 }
 
 export async function renderPoster(canvas, format, layout, imageSrcs, options) {
-  const { backgroundColor, description, logoSrc, rotations = [], tintColor = null } = options;
+  const {
+    backgroundColor,
+    description,
+    logoSrc,
+    rotations = [],
+    tintColor = null,
+    adaptiveFooter = false,
+  } = options;
   canvas.width = format.widthPx;
   canvas.height = format.heightPx;
 
@@ -86,6 +100,10 @@ export async function renderPoster(canvas, format, layout, imageSrcs, options) {
     if (images[i]) drawContainedImage(ctx, images[i], cell, backgroundColor, rotations[i] ?? 0);
   });
 
-  await drawFooter(ctx, layout, { description, logoSrc });
+  await drawFooter(ctx, layout, {
+    description,
+    logoSrc,
+    footerColor: resolveFooterColor(backgroundColor, adaptiveFooter),
+  });
   return canvas;
 }

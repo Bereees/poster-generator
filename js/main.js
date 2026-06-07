@@ -13,6 +13,7 @@ const state = {
   backgroundColor: '#ffffff',
   tintEnabled: false,
   tintColor: '#c0392b',
+  adaptiveFooter: false,
   description: '',
   randomRotation: false,
   imageSrcs: [],
@@ -30,6 +31,7 @@ const els = {
   background: document.getElementById('background'),
   tintEnabled: document.getElementById('tint-enabled'),
   tintColor: document.getElementById('tint-color'),
+  adaptiveFooter: document.getElementById('adaptive-footer'),
   description: document.getElementById('description'),
   randomRotation: document.getElementById('random-rotation'),
   generate: document.getElementById('generate'),
@@ -142,6 +144,7 @@ function getRenderOptions() {
     logoSrc: state.manifest.logo,
     rotations: state.imageRotations,
     tintColor: state.tintEnabled ? state.tintColor : null,
+    adaptiveFooter: state.adaptiveFooter,
   };
 }
 
@@ -215,6 +218,10 @@ async function init() {
   els.tintColor.addEventListener('input', (e) => {
     state.tintColor = e.target.value;
     if (state.tintEnabled) scheduleTintRefresh();
+  });
+  els.adaptiveFooter.addEventListener('change', (e) => {
+    state.adaptiveFooter = e.target.checked;
+    refreshPoster();
   });
   els.description.addEventListener('input', (e) => {
     state.description = e.target.value;

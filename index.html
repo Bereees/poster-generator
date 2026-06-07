@@ -15,7 +15,10 @@
   <body>
     <div class="app">
       <aside class="controls">
-        <h1>Poster Generator</h1>
+        <header class="app-header">
+          <img src="immagini/logo.svg" alt="" class="app-logo" width="36" height="32" />
+          <h1>Poster Generator</h1>
+        </header>
 
         <section class="collapsible-section">
           <div class="collapsible" data-collapsible>
@@ -62,22 +65,33 @@
           </div>
         </section>
 
-        <section>
+        <section class="color-field">
           <h2>Sfondo</h2>
-          <input type="color" id="background" value="#ffffff" />
+          <label class="color-swatch">
+            <input type="color" id="background" value="#ffffff" />
+          </label>
         </section>
 
-        <section>
-          <label class="toggle-option">
+        <section class="color-field">
+          <label class="color-field-heading">
             <input type="checkbox" id="tint-enabled" />
             Tinta disegni
           </label>
-          <input type="color" id="tint-color" value="#c0392b" disabled />
+          <label class="color-swatch">
+            <input type="color" id="tint-color" value="#c0392b" disabled />
+          </label>
         </section>
 
         <section>
           <h2>Descrizione</h2>
           <textarea id="description" rows="3" placeholder="Testo libero (opzionale)"></textarea>
+        </section>
+
+        <section>
+          <label class="toggle-option">
+            <input type="checkbox" id="adaptive-footer" />
+            Adatta logo e descrizione allo sfondo
+          </label>
         </section>
 
         <section>
@@ -88,16 +102,16 @@
         </section>
 
         <div class="actions">
-          <button id="generate" disabled>Genera</button>
-          <button id="regenerate" disabled>Rigenera</button>
+          <button type="button" class="btn-primary" id="generate" disabled>Genera</button>
+          <button type="button" class="btn-secondary" id="regenerate" disabled>Rigenera</button>
         </div>
 
         <section>
           <h2>Esporta</h2>
           <div class="export-group">
-            <button id="export-png" disabled>PNG</button>
-            <button id="export-jpg" disabled>JPG</button>
-            <button id="export-pdf" disabled>PDF</button>
+            <button type="button" class="btn-secondary" id="export-png" disabled>PNG</button>
+            <button type="button" class="btn-secondary" id="export-jpg" disabled>JPG</button>
+            <button type="button" class="btn-secondary" id="export-pdf" disabled>PDF</button>
           </div>
         </section>
       </aside>
