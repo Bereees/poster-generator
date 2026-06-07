@@ -11,6 +11,8 @@ const state = {
   gridId: '5x7',
   selectedCategories: new Set(),
   backgroundColor: '#ffffff',
+  tintEnabled: false,
+  tintColor: '#c0392b',
   description: '',
   randomRotation: false,
   imageSrcs: [],
@@ -26,6 +28,8 @@ const els = {
   grids: document.getElementById('grids'),
   gridSelection: document.getElementById('grid-selection'),
   background: document.getElementById('background'),
+  tintEnabled: document.getElementById('tint-enabled'),
+  tintColor: document.getElementById('tint-color'),
   description: document.getElementById('description'),
   randomRotation: document.getElementById('random-rotation'),
   generate: document.getElementById('generate'),
@@ -127,8 +131,35 @@ function renderGridControls() {
   updateGridSummary();
 }
 
+function getPosterFormat() {
+  return { ...getFormat(state.formatId), grid: getGrid(state.gridId) };
+}
+
+function getRenderOptions() {
+  return {
+    backgroundColor: state.backgroundColor,
+    description: state.description,
+    logoSrc: state.manifest.logo,
+    rotations: state.imageRotations,
+    tintColor: state.tintEnabled ? state.tintColor : null,
+  };
+}
+
+async function refreshPoster() {
+  if (!state.hasGenerated) return;
+  const format = getPosterFormat();
+  const layout = computeLayout(format);
+  await renderPoster(els.preview, format, layout, state.imageSrcs, getRenderOptions());
+}
+
+let tintRefreshTimer;
+function scheduleTintRefresh() {
+  clearTimeout(tintRefreshTimer);
+  tintRefreshTimer = setTimeout(() => refreshPoster(), 120);
+}
+
 async function generatePoster() {
-  const format = { ...getFormat(state.formatId), grid: getGrid(state.gridId) };
+  const format = getPosterFormat();
   const pool = buildImagePool(state.manifest, [...state.selectedCategories]);
   const count = getCellCount(state.gridId);
   state.imageSrcs = sampleImages(pool, count);
@@ -137,15 +168,29 @@ async function generatePoster() {
     : state.imageSrcs.map(() => 0);
   const layout = computeLayout(format);
 
-  await renderPoster(els.preview, format, layout, state.imageSrcs, {
-    backgroundColor: state.backgroundColor,
-    description: state.description,
-    logoSrc: state.manifest.logo,
-    rotations: state.imageRotations,
-  });
+  await renderPoster(els.preview, format, layout, state.imageSrcs, getRenderOptions());
 
   state.hasGenerated = true;
   updateButtons();
+}
+
+function initCollapsibles() {
+  document.querySelectorAll('[data-collapsible]').forEach((root) => {
+    const trigger = root.querySelector('.collapsible-trigger');
+    const panel = root.querySelector('.collapsible-panel');
+
+    trigger.addEventListener('click', () => {
+      const isOpen = root.classList.contains('is-open');
+      root.classList.toggle('is-open', !isOpen);
+      trigger.setAttribute('aria-expanded', String(!isOpen));
+      panel.hidden = isOpen;
+    });
+  });
+}
+
+function reportError(err) {
+  console.error(err);
+  alert(err.message ?? 'Errore durante la generazione del poster.');
 }
 
 async function init() {
@@ -156,18 +201,30 @@ async function init() {
   renderCategoryControls();
   renderFormatControls();
   renderGridControls();
+  initCollapsibles();
 
   els.background.addEventListener('input', (e) => {
     state.backgroundColor = e.target.value;
+    refreshPoster();
+  });
+  els.tintEnabled.addEventListener('change', (e) => {
+    state.tintEnabled = e.target.checked;
+    els.tintColor.disabled = !state.tintEnabled;
+    refreshPoster();
+  });
+  els.tintColor.addEventListener('input', (e) => {
+    state.tintColor = e.target.value;
+    if (state.tintEnabled) scheduleTintRefresh();
   });
   els.description.addEventListener('input', (e) => {
     state.description = e.target.value;
+    refreshPoster();
   });
   els.randomRotation.addEventListener('change', (e) => {
     state.randomRotation = e.target.checked;
   });
-  els.generate.addEventListener('click', generatePoster);
-  els.regenerate.addEventListener('click', generatePoster);
+  els.generate.addEventListener('click', () => generatePoster().catch(reportError));
+  els.regenerate.addEventListener('click', () => generatePoster().catch(reportError));
   els.exportPng.addEventListener('click', () => downloadPng(els.preview, state.formatId));
   els.exportJpg.addEventListener('click', () => downloadJpg(els.preview, state.formatId));
   els.exportPdf.addEventListener('click', () => downloadPdf(els.preview, state.formatId, getFormat(state.formatId)));

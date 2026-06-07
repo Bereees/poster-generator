@@ -18,44 +18,61 @@
         <h1>Poster Generator</h1>
 
         <section class="collapsible-section">
-          <details id="categories-menu" class="collapsible">
-            <summary>
+          <div class="collapsible" data-collapsible>
+            <button type="button" class="collapsible-trigger" aria-expanded="false">
               <span class="collapsible-heading">Categorie</span>
               <span class="collapsible-meta">
                 <span id="categories-selection" class="collapsible-value">Nessuna</span>
+                <span class="collapsible-chevron" aria-hidden="true"></span>
               </span>
-            </summary>
-            <div id="categories" class="checkbox-group"></div>
-          </details>
+            </button>
+            <div class="collapsible-panel" hidden>
+              <div id="categories" class="checkbox-group"></div>
+            </div>
+          </div>
         </section>
 
         <section class="collapsible-section">
-          <details id="format-menu" class="collapsible">
-            <summary>
+          <div class="collapsible" data-collapsible>
+            <button type="button" class="collapsible-trigger" aria-expanded="false">
               <span class="collapsible-heading">Formato</span>
               <span class="collapsible-meta">
                 <span id="format-selection" class="collapsible-value">A4 ↕</span>
+                <span class="collapsible-chevron" aria-hidden="true"></span>
               </span>
-            </summary>
-            <div id="formats" class="radio-group"></div>
-          </details>
+            </button>
+            <div class="collapsible-panel" hidden>
+              <div id="formats" class="radio-group"></div>
+            </div>
+          </div>
         </section>
 
         <section class="collapsible-section">
-          <details id="grid-menu" class="collapsible">
-            <summary>
+          <div class="collapsible" data-collapsible>
+            <button type="button" class="collapsible-trigger" aria-expanded="false">
               <span class="collapsible-heading">Griglia</span>
               <span class="collapsible-meta">
                 <span id="grid-selection" class="collapsible-value">5 × 7</span>
+                <span class="collapsible-chevron" aria-hidden="true"></span>
               </span>
-            </summary>
-            <div id="grids" class="radio-group"></div>
-          </details>
+            </button>
+            <div class="collapsible-panel" hidden>
+              <div id="grids" class="radio-group"></div>
+            </div>
+          </div>
         </section>
 
         <section>
           <h2>Sfondo</h2>
           <input type="color" id="background" value="#ffffff" />
+        </section>
+
+        <section>
+          <label class="toggle-option">
+            <input type="checkbox" id="tint-enabled" />
+            Tinta disegni
+          </label>
+          <input type="color" id="tint-color" value="#c0392b" disabled />
         </section>
 
         <section>

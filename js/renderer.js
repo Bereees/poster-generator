@@ -1,3 +1,5 @@
+import { getProcessedDrawing } from './imageFilter.js';
+
 const imageCache = new Map();
 const POSTER_FONT = 'Roboto';
 
@@ -69,7 +71,7 @@ async function drawFooter(ctx, layout, { description, logoSrc }) {
 }
 
 export async function renderPoster(canvas, format, layout, imageSrcs, options) {
-  const { backgroundColor, description, logoSrc, rotations = [] } = options;
+  const { backgroundColor, description, logoSrc, rotations = [], tintColor = null } = options;
   canvas.width = format.widthPx;
   canvas.height = format.heightPx;
 
@@ -77,7 +79,9 @@ export async function renderPoster(canvas, format, layout, imageSrcs, options) {
   ctx.fillStyle = backgroundColor;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  const images = await Promise.all(imageSrcs.map(loadImage));
+  const images = await Promise.all(
+    imageSrcs.map((src) => getProcessedDrawing(src, loadImage, tintColor))
+  );
   layout.cells.forEach((cell, i) => {
     if (images[i]) drawContainedImage(ctx, images[i], cell, backgroundColor, rotations[i] ?? 0);
   });

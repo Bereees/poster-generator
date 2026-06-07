@@ -48,19 +48,23 @@ body {
   border: 1px solid #e5e5e5;
 }
 
-.collapsible summary {
+.collapsible-trigger {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
+  width: 100%;
   padding: 0.65rem 0.75rem;
-  list-style: none;
+  border: none;
+  background: #fff;
+  color: inherit;
+  text-align: left;
   cursor: pointer;
   user-select: none;
 }
 
-.collapsible summary::-webkit-details-marker {
-  display: none;
+.collapsible-trigger:hover {
+  background: #fafafa;
 }
 
 .collapsible-heading {
@@ -87,8 +91,7 @@ body {
   text-align: right;
 }
 
-.collapsible summary::after {
-  content: '';
+.collapsible-chevron {
   width: 0.45rem;
   height: 0.45rem;
   border-right: 1.5px solid #666;
@@ -98,14 +101,21 @@ body {
   flex-shrink: 0;
 }
 
-.collapsible[open] summary::after {
+.collapsible.is-open .collapsible-chevron {
   transform: rotate(-135deg);
+}
+
+.collapsible-panel {
+  border-top: 1px solid #f0f0f0;
+}
+
+.collapsible-panel[hidden] {
+  display: none;
 }
 
 .collapsible .checkbox-group,
 .collapsible .radio-group {
   padding: 0.75rem;
-  border-top: 1px solid #f0f0f0;
 }
 
 .checkbox-group,
@@ -130,6 +140,20 @@ label.disabled {
 
 .toggle-option {
   font-size: 0.9rem;
+}
+
+#tint-color {
+  width: 100%;
+  height: 2.5rem;
+  margin-top: 0.5rem;
+  border: 1px solid #ccc;
+  padding: 0.25rem;
+  cursor: pointer;
+}
+
+#tint-color:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
 input[type='color'] {
