@@ -41,8 +41,19 @@ const els = {
   exportJpg: document.getElementById('export-jpg'),
   exportPdf: document.getElementById('export-pdf'),
   preview: document.getElementById('preview'),
+  loadingSpinner: document.getElementById('loading-spinner'),
   themeToggle: document.getElementById('theme-toggle'),
 };
+
+function setLoading(isLoading) {
+  els.loadingSpinner.hidden = !isLoading;
+  if (isLoading) {
+    els.generate.disabled = true;
+    els.regenerate.disabled = true;
+  } else {
+    updateButtons();
+  }
+}
 
 function updateButtons() {
   const hasCategories = state.selectedCategories.size > 0;
@@ -164,19 +175,23 @@ function scheduleTintRefresh() {
 }
 
 async function generatePoster() {
-  const format = getPosterFormat();
-  const pool = buildImagePool(state.manifest, [...state.selectedCategories]);
-  const count = getCellCount(state.gridId);
-  state.imageSrcs = sampleImages(pool, count);
-  state.imageRotations = state.randomRotation
-    ? state.imageSrcs.map(() => Math.random() * Math.PI * 2)
-    : state.imageSrcs.map(() => 0);
-  const layout = computeLayout(format);
+  setLoading(true);
+  try {
+    const format = getPosterFormat();
+    const pool = buildImagePool(state.manifest, [...state.selectedCategories]);
+    const count = getCellCount(state.gridId);
+    state.imageSrcs = sampleImages(pool, count);
+    state.imageRotations = state.randomRotation
+      ? state.imageSrcs.map(() => Math.random() * Math.PI * 2)
+      : state.imageSrcs.map(() => 0);
+    const layout = computeLayout(format);
 
-  await renderPoster(els.preview, format, layout, state.imageSrcs, getRenderOptions());
+    await renderPoster(els.preview, format, layout, state.imageSrcs, getRenderOptions());
 
-  state.hasGenerated = true;
-  updateButtons();
+    state.hasGenerated = true;
+  } finally {
+    setLoading(false);
+  }
 }
 
 function initCollapsibles() {

@@ -326,11 +326,40 @@ textarea::placeholder {
 }
 
 .preview-panel {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 2rem;
   background: var(--preview-bg);
+}
+
+.loading-spinner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--preview-bg);
+}
+
+.loading-spinner[hidden] {
+  display: none;
+}
+
+.spinner {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 2px solid var(--line);
+  border-top-color: var(--text-primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .preview-frame {
