@@ -267,18 +267,22 @@ input[type='radio'] {
   border-radius: 50%;
 }
 
-#scacchi-options {
+#scacchi-outline-options {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-#scacchi-options[hidden] {
+#scacchi-outline-options[hidden],
+#scacchi-color-section[hidden],
+#tint-section[hidden],
+#element-color-section[hidden],
+#random-color-section[hidden] {
   display: none;
 }
 
-.scacchi-color-field {
-  margin-top: 0;
+.btn-block {
+  width: 100%;
 }
 
 .stroke-field {

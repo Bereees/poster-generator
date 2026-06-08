@@ -1,6 +1,7 @@
 import { getProcessedDrawing } from './imageFilter.js';
 import { resolveFooterColor, isLightFooterColor } from './contrast.js';
 import { isScacchiSrc, loadScacchiAsset } from './scacchi.js';
+import { resolveAssetUrl } from './assets.js';
 
 const imageCache = new Map();
 const POSTER_FONT = 'Roboto';
@@ -16,7 +17,7 @@ export function loadImage(src) {
     const img = new Image();
     img.onload = () => resolve(img);
     img.onerror = () => reject(new Error(`Failed to load: ${src}`));
-    img.src = src;
+    img.src = resolveAssetUrl(src);
   });
   imageCache.set(src, promise);
   return promise;
@@ -88,6 +89,7 @@ export async function renderPoster(canvas, format, layout, imageSrcs, options) {
     adaptiveFooter = false,
     scacchi = null,
     scacchiFitScale = 1,
+    imageColors = null,
   } = options;
   canvas.width = format.widthPx;
   canvas.height = format.heightPx;
@@ -97,11 +99,16 @@ export async function renderPoster(canvas, format, layout, imageSrcs, options) {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   const images = await Promise.all(
-    imageSrcs.map(async (src) => {
+    imageSrcs.map(async (src, i) => {
+      const cellColor = imageColors?.[i] ?? null;
+
       if (scacchi && isScacchiSrc(src)) {
-        return loadScacchiAsset(src, scacchi, loadImage);
+        const opts = cellColor ? { ...scacchi, color: cellColor } : scacchi;
+        return loadScacchiAsset(src, opts, loadImage);
       }
-      return getProcessedDrawing(src, loadImage, tintColor);
+
+      const tint = cellColor ?? tintColor;
+      return getProcessedDrawing(src, loadImage, tint);
     })
   );
 

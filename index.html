@@ -89,7 +89,7 @@
           </label>
         </section>
 
-        <section class="color-field">
+        <section class="color-field" id="tint-section">
           <label class="color-field-heading">
             <input type="checkbox" id="tint-enabled" />
             Tinta disegni
@@ -99,18 +99,31 @@
           </label>
         </section>
 
-        <section id="scacchi-options" hidden>
+        <section class="color-field" id="scacchi-color-section" hidden>
+          <h2>Colore scacchi</h2>
+          <label class="color-swatch">
+            <input type="color" id="scacchi-color" value="#1a1a1a" />
+          </label>
+        </section>
+
+        <section class="color-field" id="element-color-section" hidden>
+          <h2>Colore</h2>
+          <label class="color-swatch">
+            <input type="color" id="element-color" value="#1a1a1a" />
+          </label>
+        </section>
+
+        <section id="random-color-section" hidden>
+          <button type="button" class="btn-secondary btn-block" id="randomize-colors" disabled>
+            Randomizza colori
+          </button>
+        </section>
+
+        <section id="scacchi-outline-options" hidden>
           <label class="toggle-option">
             <input type="checkbox" id="scacchi-outline" checked />
             Solo contorno
           </label>
-
-          <section class="color-field scacchi-color-field">
-            <h2>Colore scacchi</h2>
-            <label class="color-swatch">
-              <input type="color" id="scacchi-color" value="#1a1a1a" />
-            </label>
-          </section>
 
           <section class="stroke-field" id="scacchi-stroke-field">
             <label class="stroke-label" for="scacchi-stroke">

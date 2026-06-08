@@ -58,12 +58,16 @@
       "id": "scacchi",
       "label": "Scacchi",
       "images": [
+        "immagini/scacchi/cavallo scacco.svg",
         "immagini/scacchi/cavallo1.svg",
         "immagini/scacchi/pedone1.svg",
         "immagini/scacchi/regina1.svg",
+        "immagini/scacchi/scacco bicefalo.svg",
+        "immagini/scacchi/scacco tedesco 2.svg",
+        "immagini/scacchi/scacco tedesco.svg",
         "immagini/scacchi/torre1.svg"
       ]
     }
   ],
-  "generatedAt": "2026-06-08T10:41:40.935Z"
+  "generatedAt": "2026-06-08T15:54:50.532Z"
 }

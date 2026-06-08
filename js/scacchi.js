@@ -1,3 +1,5 @@
+import { resolveAssetUrl } from './assets.js';
+
 const svgCache = new Map();
 
 export function isScacchiSrc(src) {
@@ -56,7 +58,7 @@ export async function loadScacchiAsset(src, options, loadImage) {
   const cacheKey = `${src}|${JSON.stringify(options)}`;
   if (svgCache.has(cacheKey)) return svgCache.get(cacheKey);
 
-  const promise = fetch(src)
+  const promise = fetch(resolveAssetUrl(src))
     .then((res) => {
       if (!res.ok) throw new Error(`SVG non trovato: ${src}`);
       return res.text();
