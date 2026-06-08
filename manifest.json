@@ -50,14 +50,20 @@
       ]
     },
     {
+      "id": "poesie",
+      "label": "Poesie",
+      "images": []
+    },
+    {
       "id": "scacchi",
       "label": "Scacchi",
       "images": [
         "immagini/scacchi/cavallo1.svg",
         "immagini/scacchi/pedone1.svg",
-        "immagini/scacchi/regina1.svg"
+        "immagini/scacchi/regina1.svg",
+        "immagini/scacchi/torre1.svg"
       ]
     }
   ],
-  "generatedAt": "2026-06-08T10:06:21.146Z"
+  "generatedAt": "2026-06-08T10:41:40.935Z"
 }
