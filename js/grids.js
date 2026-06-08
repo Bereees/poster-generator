@@ -1,4 +1,7 @@
 export const GRIDS = {
+  '1x1': { cols: 1, rows: 1, label: '1 figura' },
+  '2x1': { cols: 2, rows: 1, label: '2 figure ↔' },
+  '1x2': { cols: 1, rows: 2, label: '2 figure ↕' },
   '2x3': { cols: 2, rows: 3, label: '2 × 3' },
   '3x3': { cols: 3, rows: 3, label: '3 × 3' },
   '3x4': { cols: 3, rows: 4, label: '3 × 4' },
