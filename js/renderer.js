@@ -1,6 +1,6 @@
 import { getProcessedDrawing } from './imageFilter.js';
 import { resolveFooterColor, isLightFooterColor } from './contrast.js';
-import { isScacchiSrc, loadScacchiAsset, SCACCHI_FIT_SCALE } from './scacchi.js';
+import { isScacchiSrc, loadScacchiAsset } from './scacchi.js';
 
 const imageCache = new Map();
 const POSTER_FONT = 'Roboto';
@@ -87,6 +87,7 @@ export async function renderPoster(canvas, format, layout, imageSrcs, options) {
     tintColor = null,
     adaptiveFooter = false,
     scacchi = null,
+    scacchiFitScale = 1,
   } = options;
   canvas.width = format.widthPx;
   canvas.height = format.heightPx;
@@ -106,7 +107,7 @@ export async function renderPoster(canvas, format, layout, imageSrcs, options) {
 
   layout.cells.forEach((cell, i) => {
     if (!images[i]) return;
-    const fitScale = scacchi && isScacchiSrc(imageSrcs[i]) ? SCACCHI_FIT_SCALE : 1;
+    const fitScale = isScacchiSrc(imageSrcs[i]) ? scacchiFitScale : 1;
     drawContainedImage(ctx, images[i], cell, backgroundColor, rotations[i] ?? 0, fitScale);
   });
 

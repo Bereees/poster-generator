@@ -8,6 +8,10 @@ export function isScacchiOnly(selectedCategories) {
   return selectedCategories.size === 1 && selectedCategories.has('scacchi');
 }
 
+export function hasScacchiCategory(selectedCategories) {
+  return selectedCategories.has('scacchi');
+}
+
 function parseViewBox(svgEl) {
   const parts = svgEl.getAttribute('viewBox')?.split(/\s+/).map(Number);
   if (!parts || parts.length !== 4) return { width: 100, height: 100 };
@@ -77,3 +81,8 @@ export function getScacchiGapPx(format) {
 }
 
 export const SCACCHI_FIT_SCALE = 0.8;
+export const SCACCHI_FIT_SCALE_MIXED = 0.68;
+
+export function getScacchiFitScale(scacchiOnly) {
+  return scacchiOnly ? SCACCHI_FIT_SCALE : SCACCHI_FIT_SCALE_MIXED;
+}

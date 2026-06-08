@@ -5,7 +5,12 @@ import { computeLayout } from './layout.js';
 import { renderPoster } from './renderer.js';
 import { downloadPng, downloadJpg, downloadPdf } from './export.js';
 import { initThemeToggle } from './theme.js';
-import { isScacchiOnly, getScacchiGapPx } from './scacchi.js';
+import {
+  isScacchiOnly,
+  hasScacchiCategory,
+  getScacchiGapPx,
+  getScacchiFitScale,
+} from './scacchi.js';
 
 const state = {
   manifest: null,
@@ -176,7 +181,7 @@ function updateScacchiOptionsVisibility() {
 
 function getLayoutOptions() {
   const format = getPosterFormat();
-  if (!isScacchiOnly(state.selectedCategories)) return {};
+  if (!hasScacchiCategory(state.selectedCategories)) return {};
   return { gapPx: getScacchiGapPx(format) };
 }
 
@@ -191,6 +196,7 @@ function getScacchiRenderOptions() {
 
 function getRenderOptions() {
   const scacchiOnly = isScacchiOnly(state.selectedCategories);
+  const hasScacchi = hasScacchiCategory(state.selectedCategories);
   return {
     backgroundColor: state.backgroundColor,
     description: state.description,
@@ -199,6 +205,7 @@ function getRenderOptions() {
     tintColor: scacchiOnly || !state.tintEnabled ? null : state.tintColor,
     adaptiveFooter: state.adaptiveFooter,
     scacchi: getScacchiRenderOptions(),
+    scacchiFitScale: hasScacchi ? getScacchiFitScale(scacchiOnly) : 1,
   };
 }
 
