@@ -52,8 +52,12 @@
     {
       "id": "scacchi",
       "label": "Scacchi",
-      "images": []
+      "images": [
+        "immagini/scacchi/cavallo1.svg",
+        "immagini/scacchi/pedone1.svg",
+        "immagini/scacchi/regina1.svg"
+      ]
     }
   ],
-  "generatedAt": "2026-06-05T10:28:58.637Z"
+  "generatedAt": "2026-06-08T10:06:21.146Z"
 }

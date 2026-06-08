@@ -5,6 +5,7 @@ import { computeLayout } from './layout.js';
 import { renderPoster } from './renderer.js';
 import { downloadPng, downloadJpg, downloadPdf } from './export.js';
 import { initThemeToggle } from './theme.js';
+import { isScacchiOnly, getScacchiGapPx } from './scacchi.js';
 
 const state = {
   manifest: null,
@@ -17,6 +18,9 @@ const state = {
   adaptiveFooter: false,
   description: '',
   randomRotation: false,
+  scacchiOutline: true,
+  scacchiColor: '#1a1a1a',
+  scacchiStrokeWeight: 50,
   imageSrcs: [],
   imageRotations: [],
   hasGenerated: false,
@@ -43,6 +47,13 @@ const els = {
   preview: document.getElementById('preview'),
   loadingSpinner: document.getElementById('loading-spinner'),
   themeToggle: document.getElementById('theme-toggle'),
+  scacchiOptions: document.getElementById('scacchi-options'),
+  scacchiOutline: document.getElementById('scacchi-outline'),
+  scacchiColor: document.getElementById('scacchi-color'),
+  scacchiStroke: document.getElementById('scacchi-stroke'),
+  scacchiStrokeValue: document.getElementById('scacchi-stroke-value'),
+  scacchiStrokeField: document.getElementById('scacchi-stroke-field'),
+  tintSection: document.querySelector('#tint-enabled')?.closest('.color-field'),
 };
 
 function setLoading(isLoading) {
@@ -95,7 +106,9 @@ function renderCategoryControls() {
       if (input.checked) state.selectedCategories.add(cat.id);
       else state.selectedCategories.delete(cat.id);
       updateCategoriesSummary();
+      updateScacchiOptionsVisibility();
       updateButtons();
+      refreshPoster();
     });
 
     label.append(input, document.createTextNode(empty ? `${cat.label} (vuota)` : cat.label));
@@ -116,6 +129,7 @@ function renderFormatControls() {
     input.addEventListener('change', () => {
       state.formatId = id;
       updateFormatSummary();
+      refreshPoster();
     });
     label.append(input, document.createTextNode(fmt.label));
     els.formats.append(label);
@@ -139,6 +153,7 @@ function renderGridControls() {
     input.addEventListener('change', () => {
       state.gridId = id;
       updateGridSummary();
+      refreshPoster();
     });
     label.append(input, document.createTextNode(grid.label));
     els.grids.append(label);
@@ -150,25 +165,56 @@ function getPosterFormat() {
   return { ...getFormat(state.formatId), grid: getGrid(state.gridId) };
 }
 
+function updateScacchiOptionsVisibility() {
+  const scacchiOnly = isScacchiOnly(state.selectedCategories);
+  els.scacchiOptions.hidden = !scacchiOnly;
+  if (els.tintSection) els.tintSection.hidden = scacchiOnly;
+  if (scacchiOnly) {
+    els.scacchiStrokeField.hidden = !state.scacchiOutline;
+  }
+}
+
+function getLayoutOptions() {
+  const format = getPosterFormat();
+  if (!isScacchiOnly(state.selectedCategories)) return {};
+  return { gapPx: getScacchiGapPx(format) };
+}
+
+function getScacchiRenderOptions() {
+  if (!isScacchiOnly(state.selectedCategories)) return null;
+  return {
+    outline: state.scacchiOutline,
+    color: state.scacchiColor,
+    strokeWeight: state.scacchiStrokeWeight,
+  };
+}
+
 function getRenderOptions() {
+  const scacchiOnly = isScacchiOnly(state.selectedCategories);
   return {
     backgroundColor: state.backgroundColor,
     description: state.description,
     logoSrc: state.manifest.logo,
     rotations: state.imageRotations,
-    tintColor: state.tintEnabled ? state.tintColor : null,
+    tintColor: scacchiOnly || !state.tintEnabled ? null : state.tintColor,
     adaptiveFooter: state.adaptiveFooter,
+    scacchi: getScacchiRenderOptions(),
   };
 }
 
 async function refreshPoster() {
   if (!state.hasGenerated) return;
   const format = getPosterFormat();
-  const layout = computeLayout(format);
+  const layout = computeLayout(format, getLayoutOptions());
   await renderPoster(els.preview, format, layout, state.imageSrcs, getRenderOptions());
 }
 
 let tintRefreshTimer;
+let scacchiRefreshTimer;
+function scheduleScacchiRefresh() {
+  clearTimeout(scacchiRefreshTimer);
+  scacchiRefreshTimer = setTimeout(() => refreshPoster(), 120);
+}
 function scheduleTintRefresh() {
   clearTimeout(tintRefreshTimer);
   tintRefreshTimer = setTimeout(() => refreshPoster(), 120);
@@ -184,7 +230,7 @@ async function generatePoster() {
     state.imageRotations = state.randomRotation
       ? state.imageSrcs.map(() => Math.random() * Math.PI * 2)
       : state.imageSrcs.map(() => 0);
-    const layout = computeLayout(format);
+    const layout = computeLayout(format, getLayoutOptions());
 
     await renderPoster(els.preview, format, layout, state.imageSrcs, getRenderOptions());
 
@@ -237,6 +283,20 @@ async function init() {
     state.tintColor = e.target.value;
     if (state.tintEnabled) scheduleTintRefresh();
   });
+  els.scacchiOutline.addEventListener('change', (e) => {
+    state.scacchiOutline = e.target.checked;
+    updateScacchiOptionsVisibility();
+    refreshPoster();
+  });
+  els.scacchiColor.addEventListener('input', (e) => {
+    state.scacchiColor = e.target.value;
+    scheduleScacchiRefresh();
+  });
+  els.scacchiStroke.addEventListener('input', (e) => {
+    state.scacchiStrokeWeight = Number(e.target.value);
+    els.scacchiStrokeValue.textContent = String(state.scacchiStrokeWeight);
+    if (state.scacchiOutline) scheduleScacchiRefresh();
+  });
   els.adaptiveFooter.addEventListener('change', (e) => {
     state.adaptiveFooter = e.target.checked;
     refreshPoster();
@@ -255,6 +315,7 @@ async function init() {
   els.exportPdf.addEventListener('click', () => downloadPdf(els.preview, state.formatId, getFormat(state.formatId)));
 
   updateButtons();
+  updateScacchiOptionsVisibility();
 }
 
 init().catch((err) => {

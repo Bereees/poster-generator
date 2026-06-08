@@ -1,5 +1,6 @@
 import { getProcessedDrawing } from './imageFilter.js';
 import { resolveFooterColor, isLightFooterColor } from './contrast.js';
+import { isScacchiSrc, loadScacchiAsset, SCACCHI_FIT_SCALE } from './scacchi.js';
 
 const imageCache = new Map();
 const POSTER_FONT = 'Roboto';
@@ -21,11 +22,11 @@ export function loadImage(src) {
   return promise;
 }
 
-function drawContainedImage(ctx, img, cell, bgColor, rotation = 0) {
+function drawContainedImage(ctx, img, cell, bgColor, rotation = 0, fitScale = 1) {
   ctx.fillStyle = bgColor;
   ctx.fillRect(cell.x, cell.y, cell.width, cell.height);
 
-  const scale = Math.min(cell.width / img.width, cell.height / img.height);
+  const scale = Math.min(cell.width / img.width, cell.height / img.height) * fitScale;
   const w = img.width * scale;
   const h = img.height * scale;
 
@@ -85,6 +86,7 @@ export async function renderPoster(canvas, format, layout, imageSrcs, options) {
     rotations = [],
     tintColor = null,
     adaptiveFooter = false,
+    scacchi = null,
   } = options;
   canvas.width = format.widthPx;
   canvas.height = format.heightPx;
@@ -94,10 +96,18 @@ export async function renderPoster(canvas, format, layout, imageSrcs, options) {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   const images = await Promise.all(
-    imageSrcs.map((src) => getProcessedDrawing(src, loadImage, tintColor))
+    imageSrcs.map(async (src) => {
+      if (scacchi && isScacchiSrc(src)) {
+        return loadScacchiAsset(src, scacchi, loadImage);
+      }
+      return getProcessedDrawing(src, loadImage, tintColor);
+    })
   );
+
   layout.cells.forEach((cell, i) => {
-    if (images[i]) drawContainedImage(ctx, images[i], cell, backgroundColor, rotations[i] ?? 0);
+    if (!images[i]) return;
+    const fitScale = scacchi && isScacchiSrc(imageSrcs[i]) ? SCACCHI_FIT_SCALE : 1;
+    drawContainedImage(ctx, images[i], cell, backgroundColor, rotations[i] ?? 0, fitScale);
   });
 
   await drawFooter(ctx, layout, {

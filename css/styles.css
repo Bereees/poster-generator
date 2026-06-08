@@ -267,6 +267,41 @@ input[type='radio'] {
   border-radius: 50%;
 }
 
+#scacchi-options {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+#scacchi-options[hidden] {
+  display: none;
+}
+
+.scacchi-color-field {
+  margin-top: 0;
+}
+
+.stroke-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.stroke-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.stroke-field input[type='range'] {
+  width: 100%;
+  accent-color: var(--text-primary);
+}
+
 textarea {
   width: 100%;
   padding: 0.5rem 0;

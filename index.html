@@ -99,6 +99,28 @@
           </label>
         </section>
 
+        <section id="scacchi-options" hidden>
+          <label class="toggle-option">
+            <input type="checkbox" id="scacchi-outline" checked />
+            Solo contorno
+          </label>
+
+          <section class="color-field scacchi-color-field">
+            <h2>Colore scacchi</h2>
+            <label class="color-swatch">
+              <input type="color" id="scacchi-color" value="#1a1a1a" />
+            </label>
+          </section>
+
+          <section class="stroke-field" id="scacchi-stroke-field">
+            <label class="stroke-label" for="scacchi-stroke">
+              <span>Spessore outline</span>
+              <span id="scacchi-stroke-value">50</span>
+            </label>
+            <input type="range" id="scacchi-stroke" min="20" max="100" value="50" />
+          </section>
+        </section>
+
         <section>
           <h2>Descrizione</h2>
           <textarea id="description" rows="3" placeholder="Testo libero (opzionale)"></textarea>
