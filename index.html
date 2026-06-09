@@ -38,7 +38,7 @@
         </header>
 
         <section class="collapsible-section">
-          <div class="collapsible" data-collapsible>
+          <div class="collapsible" data-collapsible data-stay-open>
             <button type="button" class="collapsible-trigger" aria-expanded="false">
               <span class="collapsible-heading">Categorie</span>
               <span class="collapsible-meta">
@@ -152,8 +152,7 @@
         </section>
 
         <div class="actions">
-          <button type="button" class="btn-primary" id="generate" disabled>Genera</button>
-          <button type="button" class="btn-secondary" id="regenerate" disabled>Rigenera</button>
+          <button type="button" class="btn-secondary" id="regenerate" disabled>Rigenera figure</button>
         </div>
 
         <section>
@@ -168,6 +167,7 @@
 
       <main class="preview-panel">
         <div class="preview-frame">
+          <p id="preview-placeholder" class="preview-placeholder">Seleziona una categoria per l'anteprima</p>
           <canvas id="preview"></canvas>
         </div>
         <div id="loading-spinner" class="loading-spinner" hidden aria-live="polite" aria-busy="true">

@@ -13,6 +13,8 @@ import {
   getScacchiFitScale,
 } from './scacchi.js';
 
+const PREVIEW_DEBOUNCE_MS = 180;
+
 const state = {
   manifest: null,
   formatId: 'a4-verticale',
@@ -46,12 +48,12 @@ const els = {
   adaptiveFooter: document.getElementById('adaptive-footer'),
   description: document.getElementById('description'),
   randomRotation: document.getElementById('random-rotation'),
-  generate: document.getElementById('generate'),
   regenerate: document.getElementById('regenerate'),
   exportPng: document.getElementById('export-png'),
   exportJpg: document.getElementById('export-jpg'),
   exportPdf: document.getElementById('export-pdf'),
   preview: document.getElementById('preview'),
+  previewPlaceholder: document.getElementById('preview-placeholder'),
   loadingSpinner: document.getElementById('loading-spinner'),
   themeToggle: document.getElementById('theme-toggle'),
   scacchiColorSection: document.getElementById('scacchi-color-section'),
@@ -68,10 +70,12 @@ const els = {
   randomColors: document.getElementById('random-colors'),
 };
 
+let previewToken = 0;
+let previewTimer;
+
 function setLoading(isLoading) {
   els.loadingSpinner.hidden = !isLoading;
   if (isLoading) {
-    els.generate.disabled = true;
     els.regenerate.disabled = true;
   } else {
     updateButtons();
@@ -80,11 +84,42 @@ function setLoading(isLoading) {
 
 function updateButtons() {
   const hasCategories = state.selectedCategories.size > 0;
-  els.generate.disabled = !hasCategories;
-  els.regenerate.disabled = !state.hasGenerated;
+  els.regenerate.disabled = !hasCategories || !state.hasGenerated;
   els.exportPng.disabled = !state.hasGenerated;
   els.exportJpg.disabled = !state.hasGenerated;
   els.exportPdf.disabled = !state.hasGenerated;
+}
+
+function showPreviewPlaceholder(show) {
+  els.previewPlaceholder.hidden = !show;
+}
+
+function clearPreview() {
+  previewToken += 1;
+  state.hasGenerated = false;
+  state.imageSrcs = [];
+  state.imageRotations = [];
+  els.preview.width = 0;
+  els.preview.height = 0;
+  showPreviewPlaceholder(true);
+  updateButtons();
+}
+
+function applyRotations() {
+  state.imageRotations = state.randomRotation
+    ? state.imageSrcs.map(() => Math.random() * Math.PI * 2)
+    : state.imageSrcs.map(() => 0);
+}
+
+function resamplePosterImages() {
+  const pool = buildImagePool(state.manifest, [...state.selectedCategories]);
+  const grid = getGrid(state.gridId);
+  const count = getCellCount(state.gridId);
+  state.imageSrcs = sampleImages(pool, count, grid);
+  applyRotations();
+  if (state.randomColorsEnabled) {
+    applyRandomImageColors();
+  }
 }
 
 function updateCategoriesSummary() {
@@ -123,7 +158,11 @@ function renderCategoryControls() {
       updateCategoriesSummary();
       updateColorOptionsVisibility();
       updateButtons();
-      refreshPoster();
+      if (!state.selectedCategories.size) {
+        clearPreview();
+        return;
+      }
+      schedulePreviewUpdate({ resample: true });
     });
 
     label.append(input, document.createTextNode(empty ? `${cat.label} (vuota)` : cat.label));
@@ -144,7 +183,7 @@ function renderFormatControls() {
     input.addEventListener('change', () => {
       state.formatId = id;
       updateFormatSummary();
-      refreshPoster();
+      schedulePreviewUpdate({ resample: true });
     });
     label.append(input, document.createTextNode(fmt.label));
     els.formats.append(label);
@@ -168,7 +207,7 @@ function renderGridControls() {
     input.addEventListener('change', () => {
       state.gridId = id;
       updateGridSummary();
-      refreshPoster();
+      schedulePreviewUpdate({ resample: true });
     });
     label.append(input, document.createTextNode(grid.label));
     els.grids.append(label);
@@ -241,13 +280,13 @@ function applyRandomImageColors() {
 
 function setRandomColorsEnabled(enabled) {
   state.randomColorsEnabled = enabled;
-  if (enabled && state.hasGenerated) {
+  if (enabled && state.imageSrcs.length) {
     applyRandomImageColors();
   } else if (!enabled) {
     state.randomColors = null;
   }
   updateColorOptionsVisibility();
-  refreshPoster();
+  schedulePreviewUpdate({ resample: false });
 }
 
 function getLayoutOptions() {
@@ -294,41 +333,67 @@ function getRenderOptions() {
   };
 }
 
-async function refreshPoster() {
-  if (!state.hasGenerated) return;
-  const format = getPosterFormat();
-  const layout = computeLayout(format, getLayoutOptions());
-  await renderPoster(els.preview, format, layout, state.imageSrcs, getRenderOptions());
-}
+async function updatePreview({ resample = false, loading = false } = {}) {
+  if (!state.selectedCategories.size) {
+    clearPreview();
+    return;
+  }
 
-let colorRefreshTimer;
-function scheduleColorRefresh() {
-  clearTimeout(colorRefreshTimer);
-  colorRefreshTimer = setTimeout(() => refreshPoster(), 120);
-}
+  if (resample || !state.imageSrcs.length) {
+    resamplePosterImages();
+  }
 
-async function generatePoster() {
-  setLoading(true);
+  const token = ++previewToken;
+  if (loading) setLoading(true);
+
   try {
     const format = getPosterFormat();
-    const pool = buildImagePool(state.manifest, [...state.selectedCategories]);
-    const grid = getGrid(state.gridId);
-    const count = getCellCount(state.gridId);
-    state.imageSrcs = sampleImages(pool, count, grid);
-    state.imageRotations = state.randomRotation
-      ? state.imageSrcs.map(() => Math.random() * Math.PI * 2)
-      : state.imageSrcs.map(() => 0);
-    if (state.randomColorsEnabled) {
-      applyRandomImageColors();
-    }
     const layout = computeLayout(format, getLayoutOptions());
-
     await renderPoster(els.preview, format, layout, state.imageSrcs, getRenderOptions());
+    if (token !== previewToken) return;
 
     state.hasGenerated = true;
+    showPreviewPlaceholder(false);
+    updateButtons();
   } finally {
-    setLoading(false);
+    if (loading) setLoading(false);
   }
+}
+
+function schedulePreviewUpdate(options = {}) {
+  if (!state.selectedCategories.size) {
+    clearPreview();
+    return;
+  }
+
+  clearTimeout(previewTimer);
+  previewTimer = setTimeout(() => {
+    updatePreview(options).catch(reportError);
+  }, PREVIEW_DEBOUNCE_MS);
+}
+
+function scheduleStyleRefresh() {
+  schedulePreviewUpdate({ resample: false });
+}
+
+function closeCollapsible(root) {
+  const trigger = root.querySelector('.collapsible-trigger');
+  const panel = root.querySelector('.collapsible-panel');
+  root.classList.remove('is-open');
+  trigger.setAttribute('aria-expanded', 'false');
+  panel.hidden = true;
+}
+
+function openCollapsible(root) {
+  const trigger = root.querySelector('.collapsible-trigger');
+  const panel = root.querySelector('.collapsible-panel');
+  root.classList.add('is-open');
+  trigger.setAttribute('aria-expanded', 'true');
+  panel.hidden = false;
+}
+
+function closeAllCollapsibles() {
+  document.querySelectorAll('[data-collapsible]').forEach((root) => closeCollapsible(root));
 }
 
 function initCollapsibles() {
@@ -336,12 +401,28 @@ function initCollapsibles() {
     const trigger = root.querySelector('.collapsible-trigger');
     const panel = root.querySelector('.collapsible-panel');
 
-    trigger.addEventListener('click', () => {
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
       const isOpen = root.classList.contains('is-open');
-      root.classList.toggle('is-open', !isOpen);
-      trigger.setAttribute('aria-expanded', String(!isOpen));
-      panel.hidden = isOpen;
+      if (isOpen) {
+        closeCollapsible(root);
+      } else {
+        closeAllCollapsibles();
+        openCollapsible(root);
+      }
     });
+
+    panel.addEventListener('change', (e) => {
+      if (root.hasAttribute('data-stay-open')) return;
+      if (e.target.matches('input[type="checkbox"], input[type="radio"]')) {
+        closeCollapsible(root);
+      }
+    });
+  });
+
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('[data-collapsible]')) return;
+    closeAllCollapsibles();
   });
 }
 
@@ -363,52 +444,58 @@ async function init() {
 
   els.background.addEventListener('input', (e) => {
     state.backgroundColor = e.target.value;
-    refreshPoster();
+    scheduleStyleRefresh();
   });
   els.tintColor.addEventListener('input', (e) => {
     state.tintColor = e.target.value;
-    scheduleColorRefresh();
+    scheduleStyleRefresh();
   });
   els.elementColor.addEventListener('input', (e) => {
     state.elementColor = e.target.value;
-    scheduleColorRefresh();
+    scheduleStyleRefresh();
   });
   els.scacchiOutline.addEventListener('change', (e) => {
     state.scacchiOutline = e.target.checked;
     updateColorOptionsVisibility();
-    refreshPoster();
+    scheduleStyleRefresh();
   });
   els.scacchiColor.addEventListener('input', (e) => {
     state.scacchiColor = e.target.value;
-    scheduleColorRefresh();
+    scheduleStyleRefresh();
   });
   els.scacchiStroke.addEventListener('input', (e) => {
     state.scacchiStrokeWeight = Number(e.target.value);
     els.scacchiStrokeValue.textContent = String(state.scacchiStrokeWeight);
-    if (state.scacchiOutline) scheduleColorRefresh();
+    if (state.scacchiOutline) scheduleStyleRefresh();
   });
   els.adaptiveFooter.addEventListener('change', (e) => {
     state.adaptiveFooter = e.target.checked;
-    refreshPoster();
+    scheduleStyleRefresh();
   });
   els.description.addEventListener('input', (e) => {
     state.description = e.target.value;
-    refreshPoster();
+    scheduleStyleRefresh();
   });
   els.randomRotation.addEventListener('change', (e) => {
     state.randomRotation = e.target.checked;
+    if (state.imageSrcs.length) {
+      applyRotations();
+      scheduleStyleRefresh();
+    }
   });
   els.randomColors.addEventListener('change', (e) => {
     setRandomColorsEnabled(e.target.checked);
   });
-  els.generate.addEventListener('click', () => generatePoster().catch(reportError));
-  els.regenerate.addEventListener('click', () => generatePoster().catch(reportError));
+  els.regenerate.addEventListener('click', () => {
+    updatePreview({ resample: true, loading: true }).catch(reportError);
+  });
   els.exportPng.addEventListener('click', () => downloadPng(els.preview, state.formatId));
   els.exportJpg.addEventListener('click', () => downloadJpg(els.preview, state.formatId));
   els.exportPdf.addEventListener('click', () => downloadPdf(els.preview, state.formatId, getFormat(state.formatId)));
 
   updateButtons();
   updateColorOptionsVisibility();
+  showPreviewPlaceholder(true);
 }
 
 init().catch((err) => {

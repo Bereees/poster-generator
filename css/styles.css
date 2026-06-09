@@ -398,8 +398,27 @@ textarea::placeholder {
 }
 
 .preview-frame {
+  position: relative;
   max-width: 100%;
   max-height: calc(100vh - 4rem);
+}
+
+.preview-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 2rem;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.preview-placeholder[hidden] {
+  display: none;
 }
 
 #preview {
