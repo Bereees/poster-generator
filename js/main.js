@@ -19,8 +19,7 @@ const state = {
   gridId: '5x7',
   selectedCategories: new Set(),
   backgroundColor: '#ffffff',
-  tintEnabled: false,
-  tintColor: '#c0392b',
+  tintColor: '#1a1a1a',
   adaptiveFooter: false,
   description: '',
   randomRotation: false,
@@ -28,6 +27,7 @@ const state = {
   scacchiColor: '#1a1a1a',
   scacchiStrokeWeight: 50,
   elementColor: '#1a1a1a',
+  randomColorsEnabled: false,
   randomColors: null,
   imageSrcs: [],
   imageRotations: [],
@@ -42,7 +42,6 @@ const els = {
   grids: document.getElementById('grids'),
   gridSelection: document.getElementById('grid-selection'),
   background: document.getElementById('background'),
-  tintEnabled: document.getElementById('tint-enabled'),
   tintColor: document.getElementById('tint-color'),
   adaptiveFooter: document.getElementById('adaptive-footer'),
   description: document.getElementById('description'),
@@ -65,8 +64,8 @@ const els = {
   scacchiStrokeValue: document.getElementById('scacchi-stroke-value'),
   scacchiStrokeField: document.getElementById('scacchi-stroke-field'),
   tintSection: document.getElementById('tint-section'),
-  randomColorSection: document.getElementById('random-color-section'),
-  randomizeColors: document.getElementById('randomize-colors'),
+  randomColorsSection: document.getElementById('random-colors-section'),
+  randomColors: document.getElementById('random-colors'),
 };
 
 function setLoading(isLoading) {
@@ -86,7 +85,6 @@ function updateButtons() {
   els.exportPng.disabled = !state.hasGenerated;
   els.exportJpg.disabled = !state.hasGenerated;
   els.exportPdf.disabled = !state.hasGenerated;
-  els.randomizeColors.disabled = !state.hasGenerated;
 }
 
 function updateCategoriesSummary() {
@@ -196,7 +194,7 @@ function syncUnifiedColorOnEnterMulti(wasMulti) {
   const hasScacchi = hasScacchiCategory(state.selectedCategories);
   const hasDisegni = hasDisegniCategory(state.selectedCategories);
 
-  if (hasDisegni && state.tintEnabled) {
+  if (hasDisegni && !hasScacchi) {
     state.elementColor = state.tintColor;
   } else if (hasScacchi) {
     state.elementColor = state.scacchiColor;
@@ -222,20 +220,33 @@ function updateColorOptionsVisibility() {
   }
 
   const hasColorable = hasScacchi || hasDisegni;
-  els.randomColorSection.hidden = !hasColorable;
+  const randomOn = state.randomColorsEnabled;
+  els.randomColorsSection.hidden = !hasColorable;
+
+  els.tintColor.disabled = randomOn;
+  els.scacchiColor.disabled = randomOn;
+  els.elementColor.disabled = randomOn;
 }
 
 function clearRandomColors() {
+  state.randomColorsEnabled = false;
   state.randomColors = null;
+  els.randomColors.checked = false;
+  updateColorOptionsVisibility();
 }
 
 function applyRandomImageColors() {
   state.randomColors = randomHexColors(state.imageSrcs.length);
 }
 
-function randomizeImageColors() {
-  if (!state.hasGenerated) return;
-  applyRandomImageColors();
+function setRandomColorsEnabled(enabled) {
+  state.randomColorsEnabled = enabled;
+  if (enabled && state.hasGenerated) {
+    applyRandomImageColors();
+  } else if (!enabled) {
+    state.randomColors = null;
+  }
+  updateColorOptionsVisibility();
   refreshPoster();
 }
 
@@ -265,7 +276,7 @@ function getRenderOptions() {
   let tintColor = null;
   if (multi && hasDisegni) {
     tintColor = state.elementColor;
-  } else if (!hasScacchi && state.tintEnabled) {
+  } else if (!hasScacchi && hasDisegni) {
     tintColor = state.tintColor;
   }
 
@@ -305,7 +316,7 @@ async function generatePoster() {
     state.imageRotations = state.randomRotation
       ? state.imageSrcs.map(() => Math.random() * Math.PI * 2)
       : state.imageSrcs.map(() => 0);
-    if (state.randomColors !== null) {
+    if (state.randomColorsEnabled) {
       applyRandomImageColors();
     }
     const layout = computeLayout(format, getLayoutOptions());
@@ -352,20 +363,12 @@ async function init() {
     state.backgroundColor = e.target.value;
     refreshPoster();
   });
-  els.tintEnabled.addEventListener('change', (e) => {
-    state.tintEnabled = e.target.checked;
-    els.tintColor.disabled = !state.tintEnabled;
-    clearRandomColors();
-    refreshPoster();
-  });
   els.tintColor.addEventListener('input', (e) => {
     state.tintColor = e.target.value;
-    clearRandomColors();
-    if (state.tintEnabled) scheduleColorRefresh();
+    scheduleColorRefresh();
   });
   els.elementColor.addEventListener('input', (e) => {
     state.elementColor = e.target.value;
-    clearRandomColors();
     scheduleColorRefresh();
   });
   els.scacchiOutline.addEventListener('change', (e) => {
@@ -375,7 +378,6 @@ async function init() {
   });
   els.scacchiColor.addEventListener('input', (e) => {
     state.scacchiColor = e.target.value;
-    clearRandomColors();
     scheduleColorRefresh();
   });
   els.scacchiStroke.addEventListener('input', (e) => {
@@ -394,7 +396,9 @@ async function init() {
   els.randomRotation.addEventListener('change', (e) => {
     state.randomRotation = e.target.checked;
   });
-  els.randomizeColors.addEventListener('click', () => randomizeImageColors());
+  els.randomColors.addEventListener('change', (e) => {
+    setRandomColorsEnabled(e.target.checked);
+  });
   els.generate.addEventListener('click', () => generatePoster().catch(reportError));
   els.regenerate.addEventListener('click', () => generatePoster().catch(reportError));
   els.exportPng.addEventListener('click', () => downloadPng(els.preview, state.formatId));

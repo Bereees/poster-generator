@@ -277,12 +277,8 @@ input[type='radio'] {
 #scacchi-color-section[hidden],
 #tint-section[hidden],
 #element-color-section[hidden],
-#random-color-section[hidden] {
+#random-colors-section[hidden] {
   display: none;
-}
-
-.btn-block {
-  width: 100%;
 }
 
 .stroke-field {
