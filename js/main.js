@@ -213,9 +213,9 @@ function updateColorOptionsVisibility() {
   els.elementColorSection.hidden = !multi;
   els.tintSection.hidden = multi || !disegniOnly;
   els.scacchiColorSection.hidden = multi || !scacchiOnly;
-  els.scacchiOutlineOptions.hidden = !scacchiOnly;
+  els.scacchiOutlineOptions.hidden = !hasScacchi;
 
-  if (scacchiOnly) {
+  if (hasScacchi) {
     els.scacchiStrokeField.hidden = !state.scacchiOutline;
   }
 
@@ -258,10 +258,9 @@ function getLayoutOptions() {
 
 function getScacchiRenderOptions() {
   if (!hasScacchiCategory(state.selectedCategories)) return null;
-  const scacchiOnly = isScacchiOnly(state.selectedCategories);
   const multi = isMultiCategory(state.selectedCategories);
   return {
-    outline: scacchiOnly && state.scacchiOutline,
+    outline: state.scacchiOutline,
     color: multi ? state.elementColor : state.scacchiColor,
     strokeWeight: state.scacchiStrokeWeight,
   };
@@ -288,7 +287,9 @@ function getRenderOptions() {
     tintColor,
     adaptiveFooter: state.adaptiveFooter,
     scacchi: getScacchiRenderOptions(),
-    scacchiFitScale: hasScacchi ? getScacchiFitScale(scacchiOnly) : 1,
+    scacchiFitScale: hasScacchi
+      ? getScacchiFitScale(scacchiOnly, Boolean(getScacchiRenderOptions()?.outline))
+      : 1,
     imageColors: state.randomColors,
   };
 }
@@ -311,8 +312,9 @@ async function generatePoster() {
   try {
     const format = getPosterFormat();
     const pool = buildImagePool(state.manifest, [...state.selectedCategories]);
+    const grid = getGrid(state.gridId);
     const count = getCellCount(state.gridId);
-    state.imageSrcs = sampleImages(pool, count);
+    state.imageSrcs = sampleImages(pool, count, grid);
     state.imageRotations = state.randomRotation
       ? state.imageSrcs.map(() => Math.random() * Math.PI * 2)
       : state.imageSrcs.map(() => 0);
