@@ -25,6 +25,7 @@ const state = {
   adaptiveFooter: false,
   description: '',
   randomRotation: false,
+  randomizeFigures: true,
   scacchiOutline: true,
   scacchiColor: '#1a1a1a',
   scacchiStrokeWeight: 50,
@@ -48,6 +49,7 @@ const els = {
   adaptiveFooter: document.getElementById('adaptive-footer'),
   description: document.getElementById('description'),
   randomRotation: document.getElementById('random-rotation'),
+  randomizeFigures: document.getElementById('randomize-figures'),
   regenerate: document.getElementById('regenerate'),
   exportPng: document.getElementById('export-png'),
   exportJpg: document.getElementById('export-jpg'),
@@ -115,7 +117,9 @@ function resamplePosterImages() {
   const pool = buildImagePool(state.manifest, [...state.selectedCategories]);
   const grid = getGrid(state.gridId);
   const count = getCellCount(state.gridId);
-  state.imageSrcs = sampleImages(pool, count, grid);
+  state.imageSrcs = sampleImages(pool, count, grid, {
+    randomizeFigures: state.randomizeFigures,
+  });
   applyRotations();
   if (state.randomColorsEnabled) {
     applyRandomImageColors();
@@ -482,6 +486,10 @@ async function init() {
       applyRotations();
       scheduleStyleRefresh();
     }
+  });
+  els.randomizeFigures.addEventListener('change', (e) => {
+    state.randomizeFigures = e.target.checked;
+    schedulePreviewUpdate({ resample: true });
   });
   els.randomColors.addEventListener('change', (e) => {
     setRandomColorsEnabled(e.target.checked);

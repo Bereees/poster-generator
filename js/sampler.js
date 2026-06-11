@@ -3,7 +3,7 @@ const PIECE_GROUPS = [
   ['regina', /regina|marinoregina/i],
   ['torre', /torre/i],
   ['pedone', /pedone/i],
-  ['re', /marinore/i],
+  ['re', /marinore|^re\d/i],
   ['tedesco', /tedesco/i],
   ['bicefalo', /bicefalo/i],
 ];
@@ -90,8 +90,15 @@ export function buildImagePool(manifest, selectedCategoryIds) {
     .flatMap((c) => c.images);
 }
 
-export function sampleImages(pool, count, grid = null) {
+export function sampleImages(pool, count, grid = null, options = {}) {
   if (!pool.length) return [];
+
+  const { randomizeFigures = true } = options;
+
+  if (!randomizeFigures) {
+    const figure = pool[Math.floor(Math.random() * pool.length)];
+    return Array(count).fill(figure);
+  }
 
   const cols = grid?.cols ?? 1;
   const rows = grid?.rows ?? count;

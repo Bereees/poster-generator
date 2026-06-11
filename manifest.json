@@ -61,6 +61,7 @@
         "immagini/scacchi/cavallo scacco.svg",
         "immagini/scacchi/cavallo1.svg",
         "immagini/scacchi/pedone1.svg",
+        "immagini/scacchi/re1.svg",
         "immagini/scacchi/regina1.svg",
         "immagini/scacchi/scacco tedesco 2.svg",
         "immagini/scacchi/scacco tedesco.svg",
@@ -72,5 +73,5 @@
       ]
     }
   ],
-  "generatedAt": "2026-06-09T14:44:18.928Z"
+  "generatedAt": "2026-06-11T10:12:38.490Z"
 }
