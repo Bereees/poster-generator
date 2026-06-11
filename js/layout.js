@@ -3,9 +3,13 @@ const MARGIN_TOP_RATIO = 0.05;
 const MARGIN_BOTTOM_RATIO = 0.12;
 const GAP_PX = 2;
 
+const DESCRIPTION_FONT_BASE = 0.22;
+
 export function computeLayout(format, options = {}) {
   const { widthPx: W, heightPx: H, grid } = format;
   const gapPx = options.gapPx ?? GAP_PX;
+  const descriptionFontWeight = options.descriptionFontWeight ?? 50;
+  const fontSizeRatio = DESCRIPTION_FONT_BASE * (descriptionFontWeight / 50);
 
   const margin = {
     left: Math.round(W * MARGIN_SIDE_RATIO),
@@ -63,7 +67,7 @@ export function computeLayout(format, options = {}) {
     },
     description: {
       paddingBottom: Math.round(footerHeight * 0.24),
-      fontSize: Math.round(footerHeight * 0.22),
+      fontSize: Math.round(footerHeight * fontSizeRatio),
       maxWidth: Math.round(footer.width * 0.6),
     },
   };

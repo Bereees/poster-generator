@@ -51,31 +51,106 @@ function drawContainedImage(ctx, img, cell, bgColor, rotation = 0, fitScale = 1)
   ctx.restore();
 }
 
+function wrapParagraph(ctx, paragraph, maxWidth) {
+  const words = paragraph.split(/\s+/).filter(Boolean);
+  if (!words.length) return [];
+
+  const lines = [];
+  let line = words[0];
+
+  for (let i = 1; i < words.length; i++) {
+    const next = `${line} ${words[i]}`;
+    if (ctx.measureText(next).width <= maxWidth) {
+      line = next;
+    } else {
+      lines.push(line);
+      line = words[i];
+    }
+  }
+
+  lines.push(line);
+  return lines;
+}
+
+function wrapDescription(ctx, text, maxWidth) {
+  return text
+    .split('\n')
+    .flatMap((paragraph) => {
+      const lines = wrapParagraph(ctx, paragraph, maxWidth);
+      return lines.length ? lines : [''];
+    });
+}
+
+function fitDescriptionLayout(ctx, text, maxWidth, maxHeight, startFontSize) {
+  const minFontSize = Math.max(10, Math.round(startFontSize * 0.35));
+  let fontSize = startFontSize;
+
+  while (fontSize >= minFontSize) {
+    ctx.font = `500 ${fontSize}px "${POSTER_FONT}", sans-serif`;
+    const lines = wrapDescription(ctx, text, maxWidth);
+    const lineHeight = fontSize * 1.2;
+    const blockHeight = lines.length * lineHeight;
+
+    if (blockHeight <= maxHeight) {
+      return { fontSize, lines, lineHeight };
+    }
+
+    fontSize -= Math.max(1, Math.round(fontSize * 0.08));
+  }
+
+  ctx.font = `500 ${minFontSize}px "${POSTER_FONT}", sans-serif`;
+  const lines = wrapDescription(ctx, text, maxWidth);
+  return { fontSize: minFontSize, lines, lineHeight: minFontSize * 1.2 };
+}
+
+function drawWrappedDescription(ctx, lines, x, bottomY, lineHeight) {
+  ctx.textBaseline = 'bottom';
+  let y = bottomY;
+
+  for (let i = lines.length - 1; i >= 0; i--) {
+    ctx.fillText(lines[i], x, y);
+    if (i > 0) y -= lineHeight;
+  }
+}
+
 async function drawFooter(ctx, layout, { description, logoSrc, footerColor }) {
   const { footer, logo, description: descStyle } = layout;
 
-  if (description) {
-    await ensurePosterFont(descStyle.fontSize);
-    ctx.fillStyle = footerColor;
-    ctx.font = `500 ${descStyle.fontSize}px "${POSTER_FONT}", sans-serif`;
-    ctx.textBaseline = 'bottom';
-    const textY = footer.y + footer.height - descStyle.paddingBottom;
-    ctx.fillText(description, footer.x, textY, descStyle.maxWidth);
-  }
-
   const logoImg = await loadImage(logoSrc);
-  const maxH = logo.maxHeight;
-  const scale = maxH / logoImg.height;
-  const w = logoImg.width * scale;
-  const h = logoImg.height * scale;
-  const x = footer.x + footer.width - w - logo.paddingRight;
-  const y = footer.y + footer.height - h - logo.paddingBottom;
+  const logoScale = logo.maxHeight / logoImg.height;
+  const logoW = logoImg.width * logoScale;
+  const logoH = logoImg.height * logoScale;
+  const logoX = footer.x + footer.width - logoW - logo.paddingRight;
+  const logoY = footer.y + footer.height - logoH - logo.paddingBottom;
+
+  if (description) {
+    const gapBeforeLogo = Math.round(footer.width * 0.03);
+    const textMaxWidth = Math.min(
+      descStyle.maxWidth,
+      Math.max(0, logoX - footer.x - gapBeforeLogo)
+    );
+    const textMaxHeight = footer.height - descStyle.paddingBottom - Math.round(footer.height * 0.1);
+    const textBottom = footer.y + footer.height - descStyle.paddingBottom;
+
+    const fitted = fitDescriptionLayout(
+      ctx,
+      description,
+      textMaxWidth,
+      textMaxHeight,
+      descStyle.fontSize
+    );
+
+    await ensurePosterFont(fitted.fontSize);
+    ctx.fillStyle = footerColor;
+    ctx.font = `500 ${fitted.fontSize}px "${POSTER_FONT}", sans-serif`;
+    drawWrappedDescription(ctx, fitted.lines, footer.x, textBottom, fitted.lineHeight);
+  }
 
   ctx.save();
   if (isLightFooterColor(footerColor)) {
     ctx.filter = 'brightness(0) invert(1)';
   }
-  ctx.drawImage(logoImg, x, y, w, h);
+  ctx.drawImage(logoImg, logoX, logoY, logoW, logoH);
   ctx.restore();
 }
 

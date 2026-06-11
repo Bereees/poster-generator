@@ -24,9 +24,10 @@ const state = {
   tintColor: '#1a1a1a',
   adaptiveFooter: false,
   description: '',
+  descriptionFontWeight: 50,
   randomRotation: false,
   randomizeFigures: true,
-  scacchiOutline: true,
+  scacchiOutline: false,
   scacchiColor: '#1a1a1a',
   scacchiStrokeWeight: 50,
   elementColor: '#1a1a1a',
@@ -48,6 +49,8 @@ const els = {
   tintColor: document.getElementById('tint-color'),
   adaptiveFooter: document.getElementById('adaptive-footer'),
   description: document.getElementById('description'),
+  descriptionSize: document.getElementById('description-size'),
+  descriptionSizeValue: document.getElementById('description-size-value'),
   randomRotation: document.getElementById('random-rotation'),
   randomizeFigures: document.getElementById('randomize-figures'),
   regenerate: document.getElementById('regenerate'),
@@ -257,10 +260,7 @@ function updateColorOptionsVisibility() {
   els.tintSection.hidden = multi || !disegniOnly;
   els.scacchiColorSection.hidden = multi || !scacchiOnly;
   els.scacchiOutlineOptions.hidden = !hasScacchi;
-
-  if (hasScacchi) {
-    els.scacchiStrokeField.hidden = !state.scacchiOutline;
-  }
+  els.scacchiStrokeField.hidden = !hasScacchi || !els.scacchiOutline.checked;
 
   const hasColorable = hasScacchi || hasDisegni;
   const randomOn = state.randomColorsEnabled;
@@ -295,8 +295,11 @@ function setRandomColorsEnabled(enabled) {
 
 function getLayoutOptions() {
   const format = getPosterFormat();
-  if (!hasScacchiCategory(state.selectedCategories)) return {};
-  return { gapPx: getScacchiGapPx(format) };
+  const options = { descriptionFontWeight: state.descriptionFontWeight };
+  if (hasScacchiCategory(state.selectedCategories)) {
+    options.gapPx = getScacchiGapPx(format);
+  }
+  return options;
 }
 
 function getScacchiRenderOptions() {
@@ -478,6 +481,11 @@ async function init() {
   });
   els.description.addEventListener('input', (e) => {
     state.description = e.target.value;
+    scheduleStyleRefresh();
+  });
+  els.descriptionSize.addEventListener('input', (e) => {
+    state.descriptionFontWeight = Number(e.target.value);
+    els.descriptionSizeValue.textContent = String(state.descriptionFontWeight);
     scheduleStyleRefresh();
   });
   els.randomRotation.addEventListener('change', (e) => {

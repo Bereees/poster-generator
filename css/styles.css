@@ -274,6 +274,7 @@ input[type='radio'] {
 }
 
 #scacchi-outline-options[hidden],
+#scacchi-stroke-field[hidden],
 #scacchi-color-section[hidden],
 #tint-section[hidden],
 #element-color-section[hidden],
@@ -300,6 +301,10 @@ input[type='radio'] {
 .stroke-field input[type='range'] {
   width: 100%;
   accent-color: var(--text-primary);
+}
+
+.description-size-field {
+  margin-top: 1rem;
 }
 
 textarea {
