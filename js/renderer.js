@@ -1,6 +1,6 @@
 import { getProcessedDrawing } from './imageFilter.js';
 import { resolveFooterColor, isLightFooterColor } from './contrast.js';
-import { isScacchiSrc, loadScacchiAsset } from './scacchi.js';
+import { isVectorCategorySrc, loadScacchiAsset } from './scacchi.js';
 import { resolveAssetUrl } from './assets.js';
 
 const imageCache = new Map();
@@ -177,7 +177,7 @@ export async function renderPoster(canvas, format, layout, imageSrcs, options) {
     imageSrcs.map(async (src, i) => {
       const cellColor = imageColors?.[i] ?? null;
 
-      if (scacchi && isScacchiSrc(src)) {
+      if (scacchi && isVectorCategorySrc(src)) {
         const opts = cellColor ? { ...scacchi, color: cellColor } : scacchi;
         return loadScacchiAsset(src, opts, loadImage);
       }
@@ -189,7 +189,7 @@ export async function renderPoster(canvas, format, layout, imageSrcs, options) {
 
   layout.cells.forEach((cell, i) => {
     if (!images[i]) return;
-    const fitScale = isScacchiSrc(imageSrcs[i]) ? scacchiFitScale : 1;
+    const fitScale = isVectorCategorySrc(imageSrcs[i]) ? scacchiFitScale : 1;
     drawContainedImage(ctx, images[i], cell, backgroundColor, rotations[i] ?? 0, fitScale);
   });
 

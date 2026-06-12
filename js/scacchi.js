@@ -3,17 +3,49 @@ import { resolveAssetUrl } from './assets.js';
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const RENDER_MIN_PX = 420;
 const svgCache = new Map();
+const VECTOR_CATEGORY_IDS = new Set(['scacchi', 'necropoli']);
+
+export function isVectorCategorySrc(src) {
+  for (const id of VECTOR_CATEGORY_IDS) {
+    if (src.includes(`immagini/${id}/`)) return true;
+  }
+  return false;
+}
 
 export function isScacchiSrc(src) {
   return src.includes('immagini/scacchi/');
+}
+
+export function isNecropoliSrc(src) {
+  return src.includes('immagini/necropoli/');
+}
+
+export function hasVectorCategory(selectedCategories) {
+  for (const id of VECTOR_CATEGORY_IDS) {
+    if (selectedCategories.has(id)) return true;
+  }
+  return false;
+}
+
+export function isVectorCategoryOnly(selectedCategories) {
+  if (selectedCategories.size !== 1) return false;
+  return VECTOR_CATEGORY_IDS.has([...selectedCategories][0]);
 }
 
 export function isScacchiOnly(selectedCategories) {
   return selectedCategories.size === 1 && selectedCategories.has('scacchi');
 }
 
+export function isNecropoliOnly(selectedCategories) {
+  return selectedCategories.size === 1 && selectedCategories.has('necropoli');
+}
+
 export function hasScacchiCategory(selectedCategories) {
   return selectedCategories.has('scacchi');
+}
+
+export function hasNecropoliCategory(selectedCategories) {
+  return selectedCategories.has('necropoli');
 }
 
 function parseViewBox(svgEl) {
