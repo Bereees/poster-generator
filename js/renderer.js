@@ -12,6 +12,10 @@ async function ensurePosterFont(fontSize) {
   await document.fonts.load(`500 ${fontSize}px ${POSTER_FONT}`);
 }
 
+export function clearImageCache() {
+  imageCache.clear();
+}
+
 export function loadImage(src) {
   if (imageCache.has(src)) return imageCache.get(src);
   const promise = new Promise((resolve, reject) => {

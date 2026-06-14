@@ -3,6 +3,10 @@ import { resolveAssetUrl } from './assets.js';
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const RENDER_MIN_PX = 420;
 const svgCache = new Map();
+
+export function clearSvgCache() {
+  svgCache.clear();
+}
 const VECTOR_CATEGORY_IDS = new Set(['scacchi', 'necropoli']);
 
 export function isVectorCategorySrc(src) {
@@ -201,7 +205,7 @@ async function svgTextToImage(svgText, loadImage) {
 async function loadOutlineBase(src, strokeWeight, loadImage) {
   const cacheKey = `${src}|outline|${strokeWeight}`;
   if (!svgCache.has(cacheKey)) {
-    const promise = fetch(resolveAssetUrl(src))
+    const promise = fetch(resolveAssetUrl(src), { cache: 'no-store' })
       .then((res) => {
         if (!res.ok) throw new Error(`SVG non trovato: ${src}`);
         return res.text();
@@ -216,7 +220,7 @@ async function loadOutlineBase(src, strokeWeight, loadImage) {
 async function loadFillAsset(src, color, loadImage) {
   const cacheKey = `${src}|fill|${color}`;
   if (!svgCache.has(cacheKey)) {
-    const promise = fetch(resolveAssetUrl(src))
+    const promise = fetch(resolveAssetUrl(src), { cache: 'no-store' })
       .then((res) => {
         if (!res.ok) throw new Error(`SVG non trovato: ${src}`);
         return res.text();

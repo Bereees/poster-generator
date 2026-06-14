@@ -2,7 +2,7 @@ import { FORMATS, getFormat } from './formats.js';
 import { GRIDS, getGrid, getCellCount } from './grids.js';
 import { buildImagePool, sampleImages } from './sampler.js';
 import { computeLayout } from './layout.js';
-import { renderPoster } from './renderer.js';
+import { renderPoster, clearImageCache } from './renderer.js';
 import { downloadPng, downloadJpg, downloadPdf } from './export.js';
 import { initThemeToggle } from './theme.js';
 import { randomHexColors } from './colors.js';
@@ -13,6 +13,7 @@ import {
   isVectorCategoryOnly,
   getScacchiGapPx,
   getScacchiFitScale,
+  clearSvgCache,
 } from './scacchi.js';
 
 const PREVIEW_DEBOUNCE_MS = 180;
@@ -348,6 +349,8 @@ async function updatePreview({ resample = false, loading = false } = {}) {
   }
 
   if (resample || !state.imageSrcs.length) {
+    clearSvgCache();
+    clearImageCache();
     resamplePosterImages();
   }
 
