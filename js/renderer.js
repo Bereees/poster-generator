@@ -1,6 +1,7 @@
 import { getProcessedDrawing } from './imageFilter.js';
 import { resolveFooterColor, isLightFooterColor } from './contrast.js';
 import { isVectorCategorySrc, loadScacchiAsset } from './scacchi.js';
+import { isIntegralSrc } from './integral.js';
 import { resolveAssetUrl } from './assets.js';
 
 const imageCache = new Map();
@@ -180,6 +181,10 @@ export async function renderPoster(canvas, format, layout, imageSrcs, options) {
       if (scacchi && isVectorCategorySrc(src)) {
         const opts = cellColor ? { ...scacchi, color: cellColor } : scacchi;
         return loadScacchiAsset(src, opts, loadImage);
+      }
+
+      if (isIntegralSrc(src)) {
+        return loadImage(src);
       }
 
       const tint = cellColor ?? tintColor;
