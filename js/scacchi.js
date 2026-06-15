@@ -7,7 +7,7 @@ const svgCache = new Map();
 export function clearSvgCache() {
   svgCache.clear();
 }
-const VECTOR_CATEGORY_IDS = new Set(['scacchi', 'necropoli']);
+const VECTOR_CATEGORY_IDS = new Set(['scacchi', 'necropoli', 'poesie']);
 
 export function isVectorCategorySrc(src) {
   for (const id of VECTOR_CATEGORY_IDS) {
@@ -22,6 +22,18 @@ export function isScacchiSrc(src) {
 
 export function isNecropoliSrc(src) {
   return src.includes('immagini/necropoli/');
+}
+
+export function isPoesieSrc(src) {
+  return src.includes('immagini/poesie/');
+}
+
+export function isPoesieOnly(selectedCategories) {
+  return selectedCategories.size === 1 && selectedCategories.has('poesie');
+}
+
+export function hasPoesieCategory(selectedCategories) {
+  return selectedCategories.has('poesie');
 }
 
 export function hasVectorCategory(selectedCategories) {
@@ -126,6 +138,23 @@ function setSvgRenderSize(svg, viewBox) {
   svg.setAttribute('height', String(Math.round(viewBox.height * scale)));
 }
 
+function prepareTextSvg(svgText, color) {
+  const doc = new DOMParser().parseFromString(svgText, 'image/svg+xml');
+  const svg = doc.documentElement;
+  const viewBox = parseViewBox(svg);
+
+  doc.querySelectorAll('style').forEach((node) => node.remove());
+  doc.querySelectorAll('text').forEach((text) => {
+    text.removeAttribute('class');
+    text.setAttribute('fill', color);
+    text.setAttribute('font-family', 'Roboto, sans-serif');
+    text.setAttribute('font-weight', '500');
+  });
+
+  setSvgRenderSize(svg, viewBox);
+  return new XMLSerializer().serializeToString(svg);
+}
+
 function prepareFillSvg(svgText, color) {
   const doc = new DOMParser().parseFromString(svgText, 'image/svg+xml');
   const svg = doc.documentElement;
@@ -217,6 +246,21 @@ async function loadOutlineBase(src, strokeWeight, loadImage) {
   return svgCache.get(cacheKey);
 }
 
+async function loadPoesieAsset(src, color, loadImage) {
+  const cacheKey = `${src}|text|${color}`;
+  if (!svgCache.has(cacheKey)) {
+    const promise = fetch(resolveAssetUrl(src), { cache: 'no-store' })
+      .then((res) => {
+        if (!res.ok) throw new Error(`SVG non trovato: ${src}`);
+        return res.text();
+      })
+      .then((text) => prepareTextSvg(text, color))
+      .then((svg) => svgTextToImage(svg, loadImage));
+    svgCache.set(cacheKey, promise);
+  }
+  return svgCache.get(cacheKey);
+}
+
 async function loadFillAsset(src, color, loadImage) {
   const cacheKey = `${src}|fill|${color}`;
   if (!svgCache.has(cacheKey)) {
@@ -233,6 +277,9 @@ async function loadFillAsset(src, color, loadImage) {
 }
 
 export async function loadScacchiAsset(src, options, loadImage) {
+  if (isPoesieSrc(src)) {
+    return loadPoesieAsset(src, options.color, loadImage);
+  }
   if (options.outline) {
     const base = await loadOutlineBase(src, options.strokeWeight, loadImage);
     return tintImage(base, options.color);
@@ -256,7 +303,32 @@ export const SCACCHI_FIT_SCALE = 0.8;
 export const SCACCHI_FIT_SCALE_MIXED = 0.68;
 export const SCACCHI_OUTLINE_FIT_FACTOR = 0.9;
 
+export const POESIE_FIT_SCALE = 0.88;
+export const POESIE_FIT_SCALE_MIXED = 0.72;
+
 export function getScacchiFitScale(scacchiOnly, outline = false) {
   const base = scacchiOnly ? SCACCHI_FIT_SCALE : SCACCHI_FIT_SCALE_MIXED;
   return outline ? base * SCACCHI_OUTLINE_FIT_FACTOR : base;
+}
+
+export function getVectorFitScale(selectedCategories, outline = false) {
+  if (isPoesieOnly(selectedCategories)) return POESIE_FIT_SCALE;
+  if (isScacchiOnly(selectedCategories)) return getScacchiFitScale(true, outline);
+  if (hasVectorCategory(selectedCategories) && !isMultiCategorySet(selectedCategories)) {
+    const id = [...selectedCategories][0];
+    if (id === 'necropoli') return 1;
+    if (id === 'poesie') return POESIE_FIT_SCALE;
+    if (id === 'scacchi') return getScacchiFitScale(true, outline);
+  }
+  if (hasScacchiCategory(selectedCategories)) {
+    return getScacchiFitScale(false, outline);
+  }
+  if (hasPoesieCategory(selectedCategories)) {
+    return POESIE_FIT_SCALE_MIXED;
+  }
+  return 1;
+}
+
+function isMultiCategorySet(selectedCategories) {
+  return selectedCategories.size > 1;
 }

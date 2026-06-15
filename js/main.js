@@ -5,14 +5,16 @@ import { computeLayout } from './layout.js';
 import { renderPoster, clearImageCache } from './renderer.js';
 import { downloadPng, downloadJpg, downloadPdf } from './export.js';
 import { initThemeToggle } from './theme.js';
+import { getCategoryLogo } from './categoryLogos.js';
 import { randomHexColors } from './colors.js';
 import {
   hasScacchiCategory,
   hasNecropoliCategory,
+  hasPoesieCategory,
   hasVectorCategory,
   isVectorCategoryOnly,
   getScacchiGapPx,
-  getScacchiFitScale,
+  getVectorFitScale,
   clearSvgCache,
 } from './scacchi.js';
 
@@ -175,7 +177,26 @@ function renderCategoryControls() {
       schedulePreviewUpdate({ resample: true });
     });
 
-    label.append(input, document.createTextNode(empty ? `${cat.label} (vuota)` : cat.label));
+    label.append(input);
+
+    const logoConfig = getCategoryLogo(cat.id);
+    if (logoConfig) {
+      const wrap = document.createElement('span');
+      wrap.className = 'category-logo-wrap';
+
+      const logo = document.createElement('img');
+      logo.src = logoConfig.src;
+      logo.alt = '';
+      logo.className = 'category-logo';
+      if (logoConfig.scale) {
+        logo.style.setProperty('--category-logo-scale', String(logoConfig.scale));
+      }
+
+      wrap.append(logo);
+      label.append(wrap);
+    }
+
+    label.append(document.createTextNode(empty ? `${cat.label} (vuota)` : cat.label));
     els.categories.append(label);
   }
   updateCategoriesSummary();
@@ -264,7 +285,7 @@ function updateColorOptionsVisibility() {
   els.scacchiOutlineOptions.hidden = !hasScacchi;
   els.scacchiStrokeField.hidden = !hasScacchi || !els.scacchiOutline.checked;
 
-  const hasColorable = hasScacchi || hasNecropoliCategory(state.selectedCategories) || hasDisegni;
+  const hasColorable = hasScacchi || hasNecropoliCategory(state.selectedCategories) || hasPoesieCategory(state.selectedCategories) || hasDisegni;
   const randomOn = state.randomColorsEnabled;
   els.randomColorsSection.hidden = !hasColorable;
 
@@ -315,8 +336,6 @@ function getScacchiRenderOptions() {
 }
 
 function getRenderOptions() {
-  const vectorOnly = isVectorCategoryOnly(state.selectedCategories);
-  const hasScacchi = hasScacchiCategory(state.selectedCategories);
   const hasDisegni = hasDisegniCategory(state.selectedCategories);
   const multi = isMultiCategory(state.selectedCategories);
 
@@ -336,7 +355,7 @@ function getRenderOptions() {
     adaptiveFooter: state.adaptiveFooter,
     scacchi: getScacchiRenderOptions(),
     scacchiFitScale: hasVectorCategory(state.selectedCategories)
-      ? getScacchiFitScale(vectorOnly, Boolean(getScacchiRenderOptions()?.outline))
+      ? getVectorFitScale(state.selectedCategories, Boolean(getScacchiRenderOptions()?.outline))
       : 1,
     imageColors: state.randomColors,
   };

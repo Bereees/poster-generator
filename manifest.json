@@ -64,7 +64,9 @@
     {
       "id": "poesie",
       "label": "Poesie",
-      "images": []
+      "images": [
+        "immagini/poesie/poesia visiva corretta1.svg"
+      ]
     },
     {
       "id": "scacchi",
@@ -85,5 +87,5 @@
       ]
     }
   ],
-  "generatedAt": "2026-06-14T21:20:08.875Z"
+  "generatedAt": "2026-06-15T12:33:58.488Z"
 }

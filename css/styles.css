@@ -196,6 +196,23 @@ label.disabled {
   cursor: not-allowed;
 }
 
+.category-logo-wrap {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.category-logo {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  filter: var(--logo-filter);
+  transform: scale(var(--category-logo-scale, 1));
+}
+
 .toggle-option {
   font-size: 0.9rem;
   color: var(--text-muted);
