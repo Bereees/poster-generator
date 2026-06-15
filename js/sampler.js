@@ -18,6 +18,10 @@ export function getSimilarityGroup(src) {
     return name.replace(/\s+\d+$/, '').trim() || name;
   }
 
+  if (src.includes('immagini/stemmi/')) {
+    return name;
+  }
+
   return src;
 }
 
@@ -90,10 +94,109 @@ export function buildImagePool(manifest, selectedCategoryIds) {
     .flatMap((c) => c.images);
 }
 
+export function buildCategoryPool(manifest, categoryId) {
+  const category = manifest.categories.find((c) => c.id === categoryId);
+  return category?.images ?? [];
+}
+
+export function isDisegniStemmiPair(selectedCategoryIds) {
+  const set = new Set(selectedCategoryIds);
+  return set.has('disegni') && set.has('stemmi');
+}
+
+function pickFromPool(pool, placed, index, cols, rows, strict) {
+  if (!pool.length) return null;
+  const candidates = shuffle(pool).filter((src) => isCompatible(src, placed, index, cols, rows));
+  if (candidates.length) return candidates[0];
+  if (strict) return null;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function fillGridAlternating(disegniPool, stemmiPool, count, cols, rows, strict, startWithDisegni) {
+  const result = new Array(count).fill(null);
+
+  for (let i = 0; i < count; i++) {
+    const useDisegni = startWithDisegni ? i % 2 === 0 : i % 2 === 1;
+    const primary = useDisegni ? disegniPool : stemmiPool;
+    const secondary = useDisegni ? stemmiPool : disegniPool;
+
+    let pick = pickFromPool(primary, result, i, cols, rows, strict);
+    if (!pick && secondary.length) {
+      pick = pickFromPool(secondary, result, i, cols, rows, strict);
+    }
+    if (!pick && !strict && primary.length) {
+      pick = primary[Math.floor(Math.random() * primary.length)];
+    }
+    if (!pick) return null;
+    result[i] = pick;
+  }
+
+  return result;
+}
+
+function sampleDisegniStemmiAlternating(manifest, count, grid, options) {
+  const disegniPool = buildCategoryPool(manifest, 'disegni');
+  const stemmiPool = buildCategoryPool(manifest, 'stemmi');
+  const { randomizeFigures = true } = options;
+
+  if (!disegniPool.length && !stemmiPool.length) return [];
+  if (!disegniPool.length) return sampleImages(stemmiPool, count, grid, { randomizeFigures });
+  if (!stemmiPool.length) return sampleImages(disegniPool, count, grid, { randomizeFigures });
+
+  if (!randomizeFigures) {
+    const disegno = disegniPool[Math.floor(Math.random() * disegniPool.length)];
+    const stemma = stemmiPool[Math.floor(Math.random() * stemmiPool.length)];
+    const startWithDisegni = Math.random() < 0.5;
+    return Array.from({ length: count }, (_, i) => {
+      const useDisegni = startWithDisegni ? i % 2 === 0 : i % 2 === 1;
+      return useDisegni ? disegno : stemma;
+    });
+  }
+
+  const cols = grid?.cols ?? 1;
+  const rows = grid?.rows ?? count;
+  let best = null;
+  let bestConflicts = Infinity;
+
+  for (let attempt = 0; attempt < 80; attempt++) {
+    const startWithDisegni = Math.random() < 0.5;
+    const candidate = fillGridAlternating(
+      disegniPool,
+      stemmiPool,
+      count,
+      cols,
+      rows,
+      attempt < 60,
+      startWithDisegni
+    );
+    if (!candidate) continue;
+
+    const conflicts = countAdjacentSimilar(candidate, cols, rows);
+    if (conflicts === 0) return candidate;
+    if (conflicts < bestConflicts) {
+      bestConflicts = conflicts;
+      best = candidate;
+    }
+  }
+
+  if (best) return best;
+
+  const startWithDisegni = Math.random() < 0.5;
+  return fillGridAlternating(disegniPool, stemmiPool, count, cols, rows, false, startWithDisegni) ?? [];
+}
+
 export function sampleImages(pool, count, grid = null, options = {}) {
   if (!pool.length) return [];
 
-  const { randomizeFigures = true } = options;
+  const { randomizeFigures = true, manifest = null, selectedCategoryIds = [] } = options;
+
+  if (
+    manifest &&
+    isDisegniStemmiPair(selectedCategoryIds) &&
+    selectedCategoryIds.every((id) => id === 'disegni' || id === 'stemmi')
+  ) {
+    return sampleDisegniStemmiAlternating(manifest, count, grid, { randomizeFigures });
+  }
 
   if (!randomizeFigures) {
     const figure = pool[Math.floor(Math.random() * pool.length)];

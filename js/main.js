@@ -6,14 +6,16 @@ import { renderPoster, clearImageCache } from './renderer.js';
 import { downloadPng, downloadJpg, downloadPdf } from './export.js';
 import { initThemeToggle } from './theme.js';
 import { getCategoryLogo } from './categoryLogos.js';
+import { sortCategories } from './categories.js';
 import { randomHexColors } from './colors.js';
 import {
   hasScacchiCategory,
   hasNecropoliCategory,
   hasPoesieCategory,
+  hasStemmiCategory,
   hasVectorCategory,
   isVectorCategoryOnly,
-  getScacchiGapPx,
+  getVectorGapPx,
   getVectorFitScale,
   clearSvgCache,
 } from './scacchi.js';
@@ -122,11 +124,14 @@ function applyRotations() {
 }
 
 function resamplePosterImages() {
-  const pool = buildImagePool(state.manifest, [...state.selectedCategories]);
+  const selectedCategoryIds = [...state.selectedCategories];
+  const pool = buildImagePool(state.manifest, selectedCategoryIds);
   const grid = getGrid(state.gridId);
   const count = getCellCount(state.gridId);
   state.imageSrcs = sampleImages(pool, count, grid, {
     randomizeFigures: state.randomizeFigures,
+    manifest: state.manifest,
+    selectedCategoryIds,
   });
   applyRotations();
   if (state.randomColorsEnabled) {
@@ -152,7 +157,7 @@ function updateFormatSummary() {
 
 function renderCategoryControls() {
   els.categories.innerHTML = '';
-  for (const cat of state.manifest.categories) {
+  for (const cat of sortCategories(state.manifest.categories)) {
     const empty = cat.images.length === 0;
     const label = document.createElement('label');
     if (empty) label.classList.add('disabled');
@@ -179,21 +184,13 @@ function renderCategoryControls() {
 
     label.append(input);
 
-    const logoConfig = getCategoryLogo(cat.id);
-    if (logoConfig) {
-      const wrap = document.createElement('span');
-      wrap.className = 'category-logo-wrap';
-
+    const logoSrc = getCategoryLogo(cat.id);
+    if (logoSrc) {
       const logo = document.createElement('img');
-      logo.src = logoConfig.src;
+      logo.src = `${logoSrc}?v=${encodeURIComponent(state.manifest.generatedAt)}`;
       logo.alt = '';
       logo.className = 'category-logo';
-      if (logoConfig.scale) {
-        logo.style.setProperty('--category-logo-scale', String(logoConfig.scale));
-      }
-
-      wrap.append(logo);
-      label.append(wrap);
+      label.append(logo);
     }
 
     label.append(document.createTextNode(empty ? `${cat.label} (vuota)` : cat.label));
@@ -285,7 +282,7 @@ function updateColorOptionsVisibility() {
   els.scacchiOutlineOptions.hidden = !hasScacchi;
   els.scacchiStrokeField.hidden = !hasScacchi || !els.scacchiOutline.checked;
 
-  const hasColorable = hasScacchi || hasNecropoliCategory(state.selectedCategories) || hasPoesieCategory(state.selectedCategories) || hasDisegni;
+  const hasColorable = hasScacchi || hasNecropoliCategory(state.selectedCategories) || hasPoesieCategory(state.selectedCategories) || hasStemmiCategory(state.selectedCategories) || hasDisegni;
   const randomOn = state.randomColorsEnabled;
   els.randomColorsSection.hidden = !hasColorable;
 
@@ -319,9 +316,8 @@ function setRandomColorsEnabled(enabled) {
 function getLayoutOptions() {
   const format = getPosterFormat();
   const options = { descriptionFontWeight: state.descriptionFontWeight };
-  if (hasScacchiCategory(state.selectedCategories)) {
-    options.gapPx = getScacchiGapPx(format);
-  }
+  const gapPx = getVectorGapPx(format, state.selectedCategories);
+  if (gapPx != null) options.gapPx = gapPx;
   return options;
 }
 

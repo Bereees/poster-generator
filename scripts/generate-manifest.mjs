@@ -29,7 +29,15 @@ async function main() {
     });
   }
 
-  categories.sort((a, b) => a.id.localeCompare(b.id));
+  categories.sort((a, b) => {
+    const order = ['articoli', 'disegni', 'stemmi', 'necropoli', 'poesie', 'scacchi'];
+    const aIndex = order.indexOf(a.id);
+    const bIndex = order.indexOf(b.id);
+    const aOrder = aIndex === -1 ? Number.MAX_SAFE_INTEGER : aIndex;
+    const bOrder = bIndex === -1 ? Number.MAX_SAFE_INTEGER : bIndex;
+    if (aOrder !== bOrder) return aOrder - bOrder;
+    return a.id.localeCompare(b.id);
+  });
 
   const manifest = {
     logo: 'immagini/logo.svg',

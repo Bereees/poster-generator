@@ -55,6 +55,32 @@
       ]
     },
     {
+      "id": "stemmi",
+      "label": "Stemmi",
+      "images": [
+        "immagini/stemmi/1.svg",
+        "immagini/stemmi/2.svg",
+        "immagini/stemmi/3.svg",
+        "immagini/stemmi/4.svg",
+        "immagini/stemmi/5.svg",
+        "immagini/stemmi/6.svg",
+        "immagini/stemmi/7.svg",
+        "immagini/stemmi/8.svg",
+        "immagini/stemmi/9.svg",
+        "immagini/stemmi/10.svg",
+        "immagini/stemmi/11.svg",
+        "immagini/stemmi/12.svg",
+        "immagini/stemmi/13.svg",
+        "immagini/stemmi/14.svg",
+        "immagini/stemmi/15.svg",
+        "immagini/stemmi/16.svg",
+        "immagini/stemmi/17.svg",
+        "immagini/stemmi/18.svg",
+        "immagini/stemmi/19.svg",
+        "immagini/stemmi/20.svg"
+      ]
+    },
+    {
       "id": "necropoli",
       "label": "Necropoli",
       "images": [
@@ -87,5 +113,5 @@
       ]
     }
   ],
-  "generatedAt": "2026-06-15T12:33:58.488Z"
+  "generatedAt": "2026-06-15T12:59:58.879Z"
 }

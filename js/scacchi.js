@@ -7,7 +7,7 @@ const svgCache = new Map();
 export function clearSvgCache() {
   svgCache.clear();
 }
-const VECTOR_CATEGORY_IDS = new Set(['scacchi', 'necropoli', 'poesie']);
+const VECTOR_CATEGORY_IDS = new Set(['scacchi', 'necropoli', 'poesie', 'stemmi']);
 
 export function isVectorCategorySrc(src) {
   for (const id of VECTOR_CATEGORY_IDS) {
@@ -34,6 +34,18 @@ export function isPoesieOnly(selectedCategories) {
 
 export function hasPoesieCategory(selectedCategories) {
   return selectedCategories.has('poesie');
+}
+
+export function isStemmiSrc(src) {
+  return src.includes('immagini/stemmi/');
+}
+
+export function isStemmiOnly(selectedCategories) {
+  return selectedCategories.size === 1 && selectedCategories.has('stemmi');
+}
+
+export function hasStemmiCategory(selectedCategories) {
+  return selectedCategories.has('stemmi');
 }
 
 export function hasVectorCategory(selectedCategories) {
@@ -155,6 +167,32 @@ function prepareTextSvg(svgText, color) {
   return new XMLSerializer().serializeToString(svg);
 }
 
+function prepareStrokeSvg(svgText, color) {
+  const doc = new DOMParser().parseFromString(svgText, 'image/svg+xml');
+  const svg = doc.documentElement;
+  const viewBox = parseViewBox(svg);
+  const strokeTags = ['path', 'polyline', 'polygon', 'line', 'circle', 'ellipse', 'rect'];
+
+  doc.querySelectorAll('style').forEach((node) => node.remove());
+
+  doc.querySelectorAll(strokeTags.join(',')).forEach((el) => {
+    const cls = el.getAttribute('class') || '';
+    if (cls.includes('cls-2') && !cls.includes('cls-1') && !cls.includes('cls-3')) return;
+
+    el.removeAttribute('class');
+    el.setAttribute('fill', 'none');
+    el.setAttribute('stroke', color);
+    el.setAttribute('stroke-miterlimit', '10');
+
+    if (!el.hasAttribute('stroke-width')) {
+      el.setAttribute('stroke-width', cls.includes('cls-3') ? '0.75' : '0.5');
+    }
+  });
+
+  setSvgRenderSize(svg, viewBox);
+  return new XMLSerializer().serializeToString(svg);
+}
+
 function prepareFillSvg(svgText, color) {
   const doc = new DOMParser().parseFromString(svgText, 'image/svg+xml');
   const svg = doc.documentElement;
@@ -261,6 +299,21 @@ async function loadPoesieAsset(src, color, loadImage) {
   return svgCache.get(cacheKey);
 }
 
+async function loadStemmiAsset(src, color, loadImage) {
+  const cacheKey = `${src}|stroke|${color}`;
+  if (!svgCache.has(cacheKey)) {
+    const promise = fetch(resolveAssetUrl(src), { cache: 'no-store' })
+      .then((res) => {
+        if (!res.ok) throw new Error(`SVG non trovato: ${src}`);
+        return res.text();
+      })
+      .then((text) => prepareStrokeSvg(text, color))
+      .then((svg) => svgTextToImage(svg, loadImage));
+    svgCache.set(cacheKey, promise);
+  }
+  return svgCache.get(cacheKey);
+}
+
 async function loadFillAsset(src, color, loadImage) {
   const cacheKey = `${src}|fill|${color}`;
   if (!svgCache.has(cacheKey)) {
@@ -279,6 +332,9 @@ async function loadFillAsset(src, color, loadImage) {
 export async function loadScacchiAsset(src, options, loadImage) {
   if (isPoesieSrc(src)) {
     return loadPoesieAsset(src, options.color, loadImage);
+  }
+  if (isStemmiSrc(src)) {
+    return loadStemmiAsset(src, options.color, loadImage);
   }
   if (options.outline) {
     const base = await loadOutlineBase(src, options.strokeWeight, loadImage);
@@ -299,12 +355,35 @@ export function getScacchiGapPx(format) {
   return Math.max(14, Math.round(cellMin * 0.1));
 }
 
+export function getPoesieGapPx(format) {
+  const W = format.widthPx;
+  const H = format.heightPx;
+  const { cols, rows } = format.grid;
+
+  const gridAreaW = W * 0.9;
+  const gridAreaH = H * 0.82;
+  const cellMin = Math.min(gridAreaW / cols, gridAreaH / rows);
+
+  return Math.max(16, Math.round(cellMin * 0.12));
+}
+
+export function getVectorGapPx(format, selectedCategories) {
+  const gaps = [];
+  if (hasScacchiCategory(selectedCategories)) gaps.push(getScacchiGapPx(format));
+  if (hasStemmiCategory(selectedCategories)) gaps.push(getScacchiGapPx(format));
+  if (hasPoesieCategory(selectedCategories)) gaps.push(getPoesieGapPx(format));
+  if (!gaps.length) return null;
+  return Math.max(...gaps);
+}
+
 export const SCACCHI_FIT_SCALE = 0.8;
 export const SCACCHI_FIT_SCALE_MIXED = 0.68;
 export const SCACCHI_OUTLINE_FIT_FACTOR = 0.9;
 
 export const POESIE_FIT_SCALE = 0.88;
 export const POESIE_FIT_SCALE_MIXED = 0.72;
+export const STEMMI_FIT_SCALE = 0.82;
+export const STEMMI_FIT_SCALE_MIXED = 0.68;
 
 export function getScacchiFitScale(scacchiOnly, outline = false) {
   const base = scacchiOnly ? SCACCHI_FIT_SCALE : SCACCHI_FIT_SCALE_MIXED;
@@ -313,15 +392,20 @@ export function getScacchiFitScale(scacchiOnly, outline = false) {
 
 export function getVectorFitScale(selectedCategories, outline = false) {
   if (isPoesieOnly(selectedCategories)) return POESIE_FIT_SCALE;
+  if (isStemmiOnly(selectedCategories)) return STEMMI_FIT_SCALE;
   if (isScacchiOnly(selectedCategories)) return getScacchiFitScale(true, outline);
   if (hasVectorCategory(selectedCategories) && !isMultiCategorySet(selectedCategories)) {
     const id = [...selectedCategories][0];
     if (id === 'necropoli') return 1;
     if (id === 'poesie') return POESIE_FIT_SCALE;
+    if (id === 'stemmi') return STEMMI_FIT_SCALE;
     if (id === 'scacchi') return getScacchiFitScale(true, outline);
   }
   if (hasScacchiCategory(selectedCategories)) {
     return getScacchiFitScale(false, outline);
+  }
+  if (hasStemmiCategory(selectedCategories)) {
+    return STEMMI_FIT_SCALE_MIXED;
   }
   if (hasPoesieCategory(selectedCategories)) {
     return POESIE_FIT_SCALE_MIXED;
