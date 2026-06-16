@@ -167,26 +167,84 @@ function prepareTextSvg(svgText, color) {
   return new XMLSerializer().serializeToString(svg);
 }
 
+function normalizeStrokeWidth(value) {
+  if (!value) return '0.5';
+  return String(value).replace(/px$/i, '').trim() || '0.5';
+}
+
+function parseSvgClassStyles(doc) {
+  const classStyles = new Map();
+
+  doc.querySelectorAll('style').forEach((styleNode) => {
+    const text = styleNode.textContent || '';
+    const rulePattern = /([^{]+)\{([^}]*)\}/g;
+    let match;
+    while ((match = rulePattern.exec(text)) !== null) {
+      const selectors = match[1].split(',').map((s) => s.trim());
+      const props = {};
+      match[2].split(';').forEach((decl) => {
+        const colon = decl.indexOf(':');
+        if (colon === -1) return;
+        const key = decl.slice(0, colon).trim();
+        const val = decl.slice(colon + 1).trim();
+        if (key && val) props[key] = val;
+      });
+
+      for (const sel of selectors) {
+        const clsMatch = sel.match(/\.(cls-\d+)/);
+        if (!clsMatch) continue;
+        const cls = clsMatch[1];
+        if (!classStyles.has(cls)) classStyles.set(cls, {});
+        Object.assign(classStyles.get(cls), props);
+      }
+    }
+  });
+
+  return classStyles;
+}
+
+function resolveElementStyle(el, classStyles) {
+  const style = {};
+  const classes = (el.getAttribute('class') || '').split(/\s+/).filter(Boolean);
+
+  for (const cls of classes) {
+    const rules = classStyles.get(cls);
+    if (rules) Object.assign(style, rules);
+  }
+
+  for (const attr of ['fill', 'stroke', 'stroke-width', 'stroke-miterlimit']) {
+    if (el.hasAttribute(attr)) style[attr] = el.getAttribute(attr);
+  }
+
+  return style;
+}
+
 function prepareStrokeSvg(svgText, color) {
   const doc = new DOMParser().parseFromString(svgText, 'image/svg+xml');
   const svg = doc.documentElement;
   const viewBox = parseViewBox(svg);
+  const classStyles = parseSvgClassStyles(doc);
   const strokeTags = ['path', 'polyline', 'polygon', 'line', 'circle', 'ellipse', 'rect'];
 
   doc.querySelectorAll('style').forEach((node) => node.remove());
 
   doc.querySelectorAll(strokeTags.join(',')).forEach((el) => {
-    const cls = el.getAttribute('class') || '';
-    if (cls.includes('cls-2') && !cls.includes('cls-1') && !cls.includes('cls-3')) return;
-
+    const style = resolveElementStyle(el, classStyles);
     el.removeAttribute('class');
     el.setAttribute('fill', 'none');
-    el.setAttribute('stroke', color);
-    el.setAttribute('stroke-miterlimit', '10');
 
-    if (!el.hasAttribute('stroke-width')) {
-      el.setAttribute('stroke-width', cls.includes('cls-3') ? '0.75' : '0.5');
+    const hasStroke = style.stroke && style.stroke !== 'none';
+    if (!hasStroke) {
+      el.setAttribute('stroke', 'none');
+      return;
     }
+
+    el.setAttribute('stroke', color);
+    el.setAttribute('stroke-miterlimit', style['stroke-miterlimit'] || '10');
+    el.setAttribute(
+      'stroke-width',
+      normalizeStrokeWidth(style['stroke-width'] || el.getAttribute('stroke-width'))
+    );
   });
 
   setSvgRenderSize(svg, viewBox);

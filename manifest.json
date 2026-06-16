@@ -11,27 +11,18 @@
       "label": "Disegni",
       "images": [
         "immagini/disegni/disegno1.png",
-        "immagini/disegni/disegno2.png",
         "immagini/disegni/disegno3.png",
-        "immagini/disegni/disegno4.png",
-        "immagini/disegni/disegno5.png",
-        "immagini/disegni/disegno6.png",
         "immagini/disegni/disegno7.png",
-        "immagini/disegni/disegno8.png",
         "immagini/disegni/disegno9.png",
         "immagini/disegni/disegno10.png",
-        "immagini/disegni/disegno11.png",
         "immagini/disegni/disegno12.png",
         "immagini/disegni/disegno13.png",
         "immagini/disegni/disegno14.png",
         "immagini/disegni/disegno15.png",
         "immagini/disegni/disegno16.png",
-        "immagini/disegni/disegno17.png",
         "immagini/disegni/disegno18.png",
-        "immagini/disegni/disegno19.png",
         "immagini/disegni/disegno20.png",
         "immagini/disegni/disegno21.png",
-        "immagini/disegni/disegno22.png",
         "immagini/disegni/disegno23.png",
         "immagini/disegni/disegno24.png",
         "immagini/disegni/disegno25.png",
@@ -40,11 +31,6 @@
         "immagini/disegni/disegno28.png",
         "immagini/disegni/disegno29.png",
         "immagini/disegni/disegno30.png",
-        "immagini/disegni/disegno31.png",
-        "immagini/disegni/disegno32.png",
-        "immagini/disegni/disegno33.png",
-        "immagini/disegni/disegno34.png",
-        "immagini/disegni/disegno35.png",
         "immagini/disegni/disegno36.png",
         "immagini/disegni/disegno37.png",
         "immagini/disegni/disegno38.png",
@@ -113,5 +99,5 @@
       ]
     }
   ],
-  "generatedAt": "2026-06-15T12:59:58.879Z"
+  "generatedAt": "2026-06-16T09:06:02.846Z"
 }
