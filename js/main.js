@@ -13,6 +13,7 @@ import {
   hasNecropoliCategory,
   hasPoesieCategory,
   hasStemmiCategory,
+  hasArticoliCategory,
   hasVectorCategory,
   isVectorCategoryOnly,
   getVectorGapPx,
@@ -282,7 +283,13 @@ function updateColorOptionsVisibility() {
   els.scacchiOutlineOptions.hidden = !hasScacchi;
   els.scacchiStrokeField.hidden = !hasScacchi || !els.scacchiOutline.checked;
 
-  const hasColorable = hasScacchi || hasNecropoliCategory(state.selectedCategories) || hasPoesieCategory(state.selectedCategories) || hasStemmiCategory(state.selectedCategories) || hasDisegni;
+  const hasColorable =
+    hasScacchi ||
+    hasNecropoliCategory(state.selectedCategories) ||
+    hasPoesieCategory(state.selectedCategories) ||
+    hasStemmiCategory(state.selectedCategories) ||
+    hasArticoliCategory(state.selectedCategories) ||
+    hasDisegni;
   const randomOn = state.randomColorsEnabled;
   els.randomColorsSection.hidden = !hasColorable;
 
@@ -351,7 +358,10 @@ function getRenderOptions() {
     adaptiveFooter: state.adaptiveFooter,
     scacchi: getScacchiRenderOptions(),
     scacchiFitScale: hasVectorCategory(state.selectedCategories)
-      ? getVectorFitScale(state.selectedCategories, Boolean(getScacchiRenderOptions()?.outline))
+      ? getVectorFitScale(
+          state.selectedCategories,
+          Boolean(getScacchiRenderOptions()?.outline)
+        )
       : 1,
     imageColors: state.randomColors,
   };

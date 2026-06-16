@@ -12,6 +12,8 @@
   --hover: rgba(255, 255, 255, 0.06);
   --open: rgba(255, 255, 255, 0.04);
   --logo-filter: brightness(0) invert(1);
+  --category-logo-filter: brightness(0) invert(1);
+  --category-logo-opacity: 1;
 }
 
 [data-theme='light'] {
@@ -28,6 +30,8 @@
   --hover: rgba(26, 26, 26, 0.05);
   --open: rgba(26, 26, 26, 0.04);
   --logo-filter: none;
+  --category-logo-filter: brightness(0) saturate(100%);
+  --category-logo-opacity: calc(229 / 255);
 }
 
 *,
@@ -201,7 +205,8 @@ label.disabled {
   width: 22px;
   height: 22px;
   object-fit: contain;
-  filter: var(--logo-filter);
+  filter: var(--category-logo-filter);
+  opacity: var(--category-logo-opacity);
 }
 
 .toggle-option {

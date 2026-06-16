@@ -7,7 +7,7 @@ const svgCache = new Map();
 export function clearSvgCache() {
   svgCache.clear();
 }
-const VECTOR_CATEGORY_IDS = new Set(['scacchi', 'necropoli', 'poesie', 'stemmi']);
+const VECTOR_CATEGORY_IDS = new Set(['scacchi', 'necropoli', 'poesie', 'stemmi', 'articoli']);
 
 export function isVectorCategorySrc(src) {
   for (const id of VECTOR_CATEGORY_IDS) {
@@ -34,6 +34,18 @@ export function isPoesieOnly(selectedCategories) {
 
 export function hasPoesieCategory(selectedCategories) {
   return selectedCategories.has('poesie');
+}
+
+export function isArticoliSrc(src) {
+  return src.includes('immagini/articoli/');
+}
+
+export function isArticoliOnly(selectedCategories) {
+  return selectedCategories.size === 1 && selectedCategories.has('articoli');
+}
+
+export function hasArticoliCategory(selectedCategories) {
+  return selectedCategories.has('articoli');
 }
 
 export function isStemmiSrc(src) {
@@ -212,8 +224,20 @@ function resolveElementStyle(el, classStyles) {
     if (rules) Object.assign(style, rules);
   }
 
-  for (const attr of ['fill', 'stroke', 'stroke-width', 'stroke-miterlimit']) {
+  for (const attr of ['fill', 'stroke', 'stroke-width', 'stroke-miterlimit', 'stroke-dasharray', 'stroke-linecap']) {
     if (el.hasAttribute(attr)) style[attr] = el.getAttribute(attr);
+  }
+
+  if (el.hasAttribute('style')) {
+    el.getAttribute('style')
+      .split(';')
+      .forEach((decl) => {
+        const colon = decl.indexOf(':');
+        if (colon === -1) return;
+        const key = decl.slice(0, colon).trim();
+        const val = decl.slice(colon + 1).trim();
+        if (key && val) style[key] = val;
+      });
   }
 
   return style;
@@ -245,6 +269,82 @@ function prepareStrokeSvg(svgText, color) {
       'stroke-width',
       normalizeStrokeWidth(style['stroke-width'] || el.getAttribute('stroke-width'))
     );
+  });
+
+  setSvgRenderSize(svg, viewBox);
+  return new XMLSerializer().serializeToString(svg);
+}
+
+function prepareArticoliFillSvg(svgText, color) {
+  const doc = new DOMParser().parseFromString(svgText, 'image/svg+xml');
+  const svg = doc.documentElement;
+  const viewBox = parseViewBox(svg);
+  const classStyles = parseSvgClassStyles(doc);
+  const shapeTags = ['path', 'polyline', 'polygon', 'line', 'circle', 'ellipse', 'rect', 'text'];
+
+  doc.querySelectorAll('style').forEach((node) => node.remove());
+
+  doc.querySelectorAll(shapeTags.join(',')).forEach((el) => {
+    const style = resolveElementStyle(el, classStyles);
+    el.removeAttribute('class');
+
+    const fill = style.fill;
+    if (!fill || fill === 'none') {
+      el.setAttribute('fill', 'none');
+      if (el.tagName.toLowerCase() !== 'text') {
+        el.setAttribute('stroke', 'none');
+      }
+      return;
+    }
+
+    el.setAttribute('fill', color);
+    if (el.tagName.toLowerCase() !== 'text') {
+      el.setAttribute('stroke', 'none');
+    }
+  });
+
+  setSvgRenderSize(svg, viewBox);
+  return new XMLSerializer().serializeToString(svg);
+}
+
+function prepareNecropoliSvg(svgText, color) {
+  const doc = new DOMParser().parseFromString(svgText, 'image/svg+xml');
+  const svg = doc.documentElement;
+  const viewBox = parseViewBox(svg);
+  const classStyles = parseSvgClassStyles(doc);
+  const shapeTags = ['path', 'polyline', 'polygon', 'line', 'circle', 'ellipse', 'rect'];
+
+  doc.querySelectorAll('style').forEach((node) => node.remove());
+
+  doc.querySelectorAll(shapeTags.join(',')).forEach((el) => {
+    const style = resolveElementStyle(el, classStyles);
+    el.removeAttribute('class');
+
+    const hasStroke = style.stroke && style.stroke !== 'none';
+    const hasFill = style.fill && style.fill !== 'none';
+
+    if (hasFill) {
+      el.setAttribute('fill', color);
+    } else {
+      el.setAttribute('fill', 'none');
+    }
+
+    if (hasStroke) {
+      el.setAttribute('stroke', color);
+      el.setAttribute('stroke-miterlimit', style['stroke-miterlimit'] || '10');
+      el.setAttribute(
+        'stroke-width',
+        normalizeStrokeWidth(style['stroke-width'] || el.getAttribute('stroke-width'))
+      );
+      if (style['stroke-dasharray']) {
+        el.setAttribute('stroke-dasharray', style['stroke-dasharray']);
+      }
+      if (style['stroke-linecap']) {
+        el.setAttribute('stroke-linecap', style['stroke-linecap']);
+      }
+    } else {
+      el.setAttribute('stroke', 'none');
+    }
   });
 
   setSvgRenderSize(svg, viewBox);
@@ -357,6 +457,21 @@ async function loadPoesieAsset(src, color, loadImage) {
   return svgCache.get(cacheKey);
 }
 
+async function loadArticoliAsset(src, color, loadImage) {
+  const cacheKey = `${src}|articoli|${color}`;
+  if (!svgCache.has(cacheKey)) {
+    const promise = fetch(resolveAssetUrl(src), { cache: 'no-store' })
+      .then((res) => {
+        if (!res.ok) throw new Error(`SVG non trovato: ${src}`);
+        return res.text();
+      })
+      .then((text) => prepareArticoliFillSvg(text, color))
+      .then((svg) => svgTextToImage(svg, loadImage));
+    svgCache.set(cacheKey, promise);
+  }
+  return svgCache.get(cacheKey);
+}
+
 async function loadStemmiAsset(src, color, loadImage) {
   const cacheKey = `${src}|stroke|${color}`;
   if (!svgCache.has(cacheKey)) {
@@ -366,6 +481,21 @@ async function loadStemmiAsset(src, color, loadImage) {
         return res.text();
       })
       .then((text) => prepareStrokeSvg(text, color))
+      .then((svg) => svgTextToImage(svg, loadImage));
+    svgCache.set(cacheKey, promise);
+  }
+  return svgCache.get(cacheKey);
+}
+
+async function loadNecropoliAsset(src, color, loadImage) {
+  const cacheKey = `${src}|necropoli|${color}`;
+  if (!svgCache.has(cacheKey)) {
+    const promise = fetch(resolveAssetUrl(src), { cache: 'no-store' })
+      .then((res) => {
+        if (!res.ok) throw new Error(`SVG non trovato: ${src}`);
+        return res.text();
+      })
+      .then((text) => prepareNecropoliSvg(text, color))
       .then((svg) => svgTextToImage(svg, loadImage));
     svgCache.set(cacheKey, promise);
   }
@@ -388,11 +518,17 @@ async function loadFillAsset(src, color, loadImage) {
 }
 
 export async function loadScacchiAsset(src, options, loadImage) {
+  if (isArticoliSrc(src)) {
+    return loadArticoliAsset(src, options.color, loadImage);
+  }
   if (isPoesieSrc(src)) {
     return loadPoesieAsset(src, options.color, loadImage);
   }
   if (isStemmiSrc(src)) {
     return loadStemmiAsset(src, options.color, loadImage);
+  }
+  if (isNecropoliSrc(src)) {
+    return loadNecropoliAsset(src, options.color, loadImage);
   }
   if (options.outline) {
     const base = await loadOutlineBase(src, options.strokeWeight, loadImage);
@@ -442,6 +578,8 @@ export const POESIE_FIT_SCALE = 0.88;
 export const POESIE_FIT_SCALE_MIXED = 0.72;
 export const STEMMI_FIT_SCALE = 0.82;
 export const STEMMI_FIT_SCALE_MIXED = 0.68;
+export const ARTICOLI_FIT_SCALE = 0.92;
+export const ARTICOLI_FIT_SCALE_MIXED = 0.78;
 
 export function getScacchiFitScale(scacchiOnly, outline = false) {
   const base = scacchiOnly ? SCACCHI_FIT_SCALE : SCACCHI_FIT_SCALE_MIXED;
@@ -449,12 +587,14 @@ export function getScacchiFitScale(scacchiOnly, outline = false) {
 }
 
 export function getVectorFitScale(selectedCategories, outline = false) {
+  if (isArticoliOnly(selectedCategories)) return ARTICOLI_FIT_SCALE;
   if (isPoesieOnly(selectedCategories)) return POESIE_FIT_SCALE;
   if (isStemmiOnly(selectedCategories)) return STEMMI_FIT_SCALE;
   if (isScacchiOnly(selectedCategories)) return getScacchiFitScale(true, outline);
   if (hasVectorCategory(selectedCategories) && !isMultiCategorySet(selectedCategories)) {
     const id = [...selectedCategories][0];
     if (id === 'necropoli') return 1;
+    if (id === 'articoli') return ARTICOLI_FIT_SCALE;
     if (id === 'poesie') return POESIE_FIT_SCALE;
     if (id === 'stemmi') return STEMMI_FIT_SCALE;
     if (id === 'scacchi') return getScacchiFitScale(true, outline);
@@ -467,6 +607,9 @@ export function getVectorFitScale(selectedCategories, outline = false) {
   }
   if (hasPoesieCategory(selectedCategories)) {
     return POESIE_FIT_SCALE_MIXED;
+  }
+  if (hasArticoliCategory(selectedCategories)) {
+    return ARTICOLI_FIT_SCALE_MIXED;
   }
   return 1;
 }
