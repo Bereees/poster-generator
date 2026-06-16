@@ -18,7 +18,7 @@ export function getSimilarityGroup(src) {
     return name.replace(/\s+\d+$/, '').trim() || name;
   }
 
-  if (src.includes('immagini/stemmi/') || src.includes('immagini/articoli/') || src.includes('immagini/necropoli/')) {
+  if (src.includes('immagini/stemmi/') || src.includes('immagini/articoli/') || src.includes('immagini/necropoli/') || src.includes('immagini/poesie/')) {
     return name;
   }
 

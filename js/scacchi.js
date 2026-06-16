@@ -162,17 +162,46 @@ function setSvgRenderSize(svg, viewBox) {
   svg.setAttribute('height', String(Math.round(viewBox.height * scale)));
 }
 
+function applyPoetryTextColor(el, color) {
+  el.removeAttribute('class');
+  el.setAttribute('fill', color);
+
+  if (el.hasAttribute('style')) {
+    const props = {};
+    el.getAttribute('style')
+      .split(';')
+      .forEach((decl) => {
+        const colon = decl.indexOf(':');
+        if (colon === -1) return;
+        const key = decl.slice(0, colon).trim().toLowerCase();
+        const val = decl.slice(colon + 1).trim();
+        if (key && val && key !== 'fill') props[key] = val;
+      });
+    const remaining = Object.entries(props)
+      .map(([key, val]) => `${key}:${val}`)
+      .join(';');
+    if (remaining) el.setAttribute('style', remaining);
+    else el.removeAttribute('style');
+  }
+}
+
 function prepareTextSvg(svgText, color) {
   const doc = new DOMParser().parseFromString(svgText, 'image/svg+xml');
   const svg = doc.documentElement;
   const viewBox = parseViewBox(svg);
 
   doc.querySelectorAll('style').forEach((node) => node.remove());
-  doc.querySelectorAll('text').forEach((text) => {
-    text.removeAttribute('class');
-    text.setAttribute('fill', color);
-    text.setAttribute('font-family', 'Roboto, sans-serif');
-    text.setAttribute('font-weight', '500');
+  doc.querySelectorAll('text, tspan').forEach((el) => {
+    applyPoetryTextColor(el, color);
+    if (el.tagName.toLowerCase() === 'text') {
+      const style = el.getAttribute('style') || '';
+      if (!el.getAttribute('font-family') && !style.includes('font-family')) {
+        el.setAttribute('font-family', 'Roboto, sans-serif');
+      }
+      if (!el.getAttribute('font-weight') && !style.includes('font-weight')) {
+        el.setAttribute('font-weight', '500');
+      }
+    }
   });
 
   setSvgRenderSize(svg, viewBox);

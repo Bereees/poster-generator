@@ -88,7 +88,10 @@
       "id": "poesie",
       "label": "Poesie",
       "images": [
-        "immagini/poesie/poesia visiva corretta1.svg"
+        "immagini/poesie/poesia 3.svg",
+        "immagini/poesie/poesia visiva corretta1.svg",
+        "immagini/poesie/poesia1.svg",
+        "immagini/poesie/poesia2.svg"
       ]
     },
     {
@@ -110,5 +113,5 @@
       ]
     }
   ],
-  "generatedAt": "2026-06-16T14:02:55.758Z"
+  "generatedAt": "2026-06-16T14:43:55.413Z"
 }
