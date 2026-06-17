@@ -7,7 +7,7 @@ const svgCache = new Map();
 export function clearSvgCache() {
   svgCache.clear();
 }
-const VECTOR_CATEGORY_IDS = new Set(['scacchi', 'necropoli', 'poesie', 'stemmi', 'articoli']);
+const VECTOR_CATEGORY_IDS = new Set(['scacchi', 'scacchicomplessi', 'necropoli', 'poesie', 'stemmi', 'articoli']);
 
 export function isVectorCategorySrc(src) {
   for (const id of VECTOR_CATEGORY_IDS) {
@@ -18,6 +18,22 @@ export function isVectorCategorySrc(src) {
 
 export function isScacchiSrc(src) {
   return src.includes('immagini/scacchi/');
+}
+
+export function isScacchiComplessiSrc(src) {
+  return src.includes('immagini/scacchicomplessi/');
+}
+
+export function isScacchiComplessiOnly(selectedCategories) {
+  return selectedCategories.size === 1 && selectedCategories.has('scacchicomplessi');
+}
+
+export function hasScacchiComplessiCategory(selectedCategories) {
+  return selectedCategories.has('scacchicomplessi');
+}
+
+export function hasChessLikeCategory(selectedCategories) {
+  return hasScacchiCategory(selectedCategories) || hasScacchiComplessiCategory(selectedCategories);
 }
 
 export function isNecropoliSrc(src) {
@@ -566,7 +582,7 @@ export async function loadScacchiAsset(src, options, loadImage) {
   if (isNecropoliSrc(src)) {
     return loadNecropoliAsset(src, options.color, loadImage);
   }
-  if (options.outline) {
+  if (options.outline && isScacchiSrc(src)) {
     const base = await loadOutlineBase(src, options.strokeWeight, loadImage);
     return tintImage(base, options.color);
   }
@@ -599,7 +615,7 @@ export function getPoesieGapPx(format) {
 
 export function getVectorGapPx(format, selectedCategories) {
   const gaps = [];
-  if (hasScacchiCategory(selectedCategories)) gaps.push(getScacchiGapPx(format));
+  if (hasChessLikeCategory(selectedCategories)) gaps.push(getScacchiGapPx(format));
   if (hasStemmiCategory(selectedCategories)) gaps.push(getScacchiGapPx(format));
   if (hasPoesieCategory(selectedCategories)) gaps.push(getPoesieGapPx(format));
   if (!gaps.length) return null;
@@ -627,15 +643,16 @@ export function getVectorFitScale(selectedCategories, outline = false) {
   if (isPoesieOnly(selectedCategories)) return POESIE_FIT_SCALE;
   if (isStemmiOnly(selectedCategories)) return STEMMI_FIT_SCALE;
   if (isScacchiOnly(selectedCategories)) return getScacchiFitScale(true, outline);
+  if (isScacchiComplessiOnly(selectedCategories)) return getScacchiFitScale(true, outline);
   if (hasVectorCategory(selectedCategories) && !isMultiCategorySet(selectedCategories)) {
     const id = [...selectedCategories][0];
     if (id === 'necropoli') return 1;
     if (id === 'articoli') return ARTICOLI_FIT_SCALE;
     if (id === 'poesie') return POESIE_FIT_SCALE;
     if (id === 'stemmi') return STEMMI_FIT_SCALE;
-    if (id === 'scacchi') return getScacchiFitScale(true, outline);
+    if (id === 'scacchi' || id === 'scacchicomplessi') return getScacchiFitScale(true, outline);
   }
-  if (hasScacchiCategory(selectedCategories)) {
+  if (hasChessLikeCategory(selectedCategories)) {
     return getScacchiFitScale(false, outline);
   }
   if (hasStemmiCategory(selectedCategories)) {

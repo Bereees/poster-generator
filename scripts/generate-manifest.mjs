@@ -6,6 +6,9 @@ const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const IMMAGINI = join(ROOT, 'immagini');
 const OUT = join(ROOT, 'manifest.json');
 const IMAGE_EXT = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg']);
+const CATEGORY_LABELS = {
+  scacchicomplessi: 'Scacchi complessi',
+};
 
 async function listImages(dir) {
   const entries = await readdir(dir, { withFileTypes: true });
@@ -24,13 +27,13 @@ async function main() {
     const images = await listImages(join(IMMAGINI, entry.name));
     categories.push({
       id: entry.name,
-      label: entry.name.charAt(0).toUpperCase() + entry.name.slice(1),
+      label: CATEGORY_LABELS[entry.name] ?? entry.name.charAt(0).toUpperCase() + entry.name.slice(1),
       images: images.map((name) => `immagini/${entry.name}/${name}`),
     });
   }
 
   categories.sort((a, b) => {
-    const order = ['articoli', 'disegni', 'stemmi', 'necropoli', 'poesie', 'scacchi'];
+    const order = ['articoli', 'disegni', 'stemmi', 'necropoli', 'poesie', 'scacchi', 'scacchicomplessi'];
     const aIndex = order.indexOf(a.id);
     const bIndex = order.indexOf(b.id);
     const aOrder = aIndex === -1 ? Number.MAX_SAFE_INTEGER : aIndex;

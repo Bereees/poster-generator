@@ -5,6 +5,7 @@ export const CATEGORY_DISPLAY_ORDER = [
   'necropoli',
   'poesie',
   'scacchi',
+  'scacchicomplessi',
 ];
 
 export function sortCategories(categories) {

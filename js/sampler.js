@@ -11,7 +11,7 @@ const PIECE_GROUPS = [
 export function getSimilarityGroup(src) {
   const name = src.split('/').pop().replace(/\.[^.]+$/, '').toLowerCase();
 
-  if (src.includes('immagini/scacchi/')) {
+  if (src.includes('immagini/scacchi/') || src.includes('immagini/scacchicomplessi/')) {
     for (const [group, pattern] of PIECE_GROUPS) {
       if (pattern.test(name)) return group;
     }

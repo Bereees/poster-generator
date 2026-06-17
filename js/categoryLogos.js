@@ -4,6 +4,7 @@ export const CATEGORY_LOGOS = {
   necropoli: 'immagini/logomarialuisa.svg',
   poesie: 'immagini/logogori.svg',
   scacchi: 'immagini/logoantonio.svg',
+  scacchicomplessi: 'immagini/logoantonio.svg',
   stemmi: 'immagini/logoannamori.svg',
 };
 

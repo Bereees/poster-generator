@@ -102,15 +102,21 @@
         "immagini/scacchi/pedone1.svg",
         "immagini/scacchi/re1.svg",
         "immagini/scacchi/regina1.svg",
-        "immagini/scacchi/scacco tedesco 2.svg",
-        "immagini/scacchi/scacco tedesco.svg",
         "immagini/scacchi/scaccobicefalo corretto.svg",
-        "immagini/scacchi/scaccomarinocav.svg",
-        "immagini/scacchi/scaccomarinore.svg",
-        "immagini/scacchi/scaccomarinoregina.svg",
         "immagini/scacchi/torre1.svg"
+      ]
+    },
+    {
+      "id": "scacchicomplessi",
+      "label": "Scacchi complessi",
+      "images": [
+        "immagini/scacchicomplessi/scacco tedesco 2.svg",
+        "immagini/scacchicomplessi/scacco tedesco.svg",
+        "immagini/scacchicomplessi/scaccomarinocav.svg",
+        "immagini/scacchicomplessi/scaccomarinore.svg",
+        "immagini/scacchicomplessi/scaccomarinoregina.svg"
       ]
     }
   ],
-  "generatedAt": "2026-06-17T10:40:57.735Z"
+  "generatedAt": "2026-06-17T11:20:40.353Z"
 }

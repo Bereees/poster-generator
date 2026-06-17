@@ -10,6 +10,7 @@ import { sortCategories } from './categories.js';
 import { randomHexColors } from './colors.js';
 import {
   hasScacchiCategory,
+  hasScacchiComplessiCategory,
   hasNecropoliCategory,
   hasPoesieCategory,
   hasStemmiCategory,
@@ -262,6 +263,7 @@ function hasElementColorControl(selectedCategories) {
   return (
     hasDisegniCategory(selectedCategories) ||
     hasScacchiCategory(selectedCategories) ||
+    hasScacchiComplessiCategory(selectedCategories) ||
     hasNecropoliCategory(selectedCategories) ||
     hasPoesieCategory(selectedCategories) ||
     hasStemmiCategory(selectedCategories) ||
