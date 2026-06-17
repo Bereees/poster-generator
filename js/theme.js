@@ -16,5 +16,6 @@ export function toggleTheme() {
 }
 
 export function initThemeToggle(button) {
+  if (!button) return;
   button.addEventListener('click', toggleTheme);
 }

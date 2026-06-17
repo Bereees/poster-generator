@@ -79,6 +79,21 @@ const els = {
 let previewToken = 0;
 let previewTimer;
 
+function bind(el, events, handler) {
+  if (!el) return;
+  for (const event of events.split(/\s+/)) {
+    el.addEventListener(event, handler);
+  }
+}
+
+function getElementColorInput() {
+  return (
+    document.getElementById('element-color') ||
+    document.getElementById('tint-color') ||
+    document.getElementById('scacchi-color')
+  );
+}
+
 function setLoading(isLoading) {
   els.loadingSpinner.hidden = !isLoading;
   if (isLoading) {
@@ -259,17 +274,27 @@ function updateColorOptionsVisibility() {
   const hasElementColor = hasElementColorControl(state.selectedCategories);
   const randomOn = state.randomColorsEnabled;
 
-  els.elementColorSection.hidden = !hasElementColor;
-  els.scacchiOutlineOptions.hidden = !hasScacchi;
-  els.scacchiStrokeField.hidden = !hasScacchi || !els.scacchiOutline.checked;
-  els.randomColorsSection.hidden = !hasElementColor;
-  els.elementColor.disabled = randomOn;
+  if (els.elementColorSection) {
+    els.elementColorSection.hidden = !hasElementColor;
+  }
+  if (els.scacchiOutlineOptions) {
+    els.scacchiOutlineOptions.hidden = !hasScacchi;
+  }
+  if (els.scacchiStrokeField) {
+    els.scacchiStrokeField.hidden = !hasScacchi || !els.scacchiOutline?.checked;
+  }
+  if (els.randomColorsSection) {
+    els.randomColorsSection.hidden = !hasElementColor;
+  }
+  if (els.elementColor) {
+    els.elementColor.disabled = randomOn;
+  }
 }
 
 function clearRandomColors() {
   state.randomColorsEnabled = false;
   state.randomColors = null;
-  els.randomColors.checked = false;
+  if (els.randomColors) els.randomColors.checked = false;
   updateColorOptionsVisibility();
 }
 
@@ -432,63 +457,80 @@ async function init() {
   state.manifest = await res.json();
   setAssetVersion(state.manifest.generatedAt);
 
+  els.elementColor = getElementColorInput();
+
   renderCategoryControls();
   renderFormatControls();
   renderGridControls();
   initCollapsibles();
-  initThemeToggle(els.themeToggle);
+  if (els.themeToggle) initThemeToggle(els.themeToggle);
 
-  els.background.addEventListener('input', (e) => {
+  bind(els.background, 'input change', (e) => {
     state.backgroundColor = e.target.value;
     scheduleStyleRefresh();
   });
-  els.elementColor.addEventListener('input', (e) => {
+
+  bind(els.elementColor, 'input change', (e) => {
     state.elementColor = e.target.value;
     scheduleStyleRefresh();
   });
-  els.scacchiOutline.addEventListener('change', (e) => {
+
+  bind(els.scacchiOutline, 'change', (e) => {
     state.scacchiOutline = e.target.checked;
     updateColorOptionsVisibility();
     scheduleStyleRefresh();
   });
-  els.scacchiStroke.addEventListener('input', (e) => {
+
+  bind(els.scacchiStroke, 'input change', (e) => {
     state.scacchiStrokeWeight = Number(e.target.value);
-    els.scacchiStrokeValue.textContent = String(state.scacchiStrokeWeight);
+    if (els.scacchiStrokeValue) {
+      els.scacchiStrokeValue.textContent = String(state.scacchiStrokeWeight);
+    }
     if (state.scacchiOutline) scheduleStyleRefresh();
   });
-  els.adaptiveFooter.addEventListener('change', (e) => {
+
+  bind(els.adaptiveFooter, 'change', (e) => {
     state.adaptiveFooter = e.target.checked;
     scheduleStyleRefresh();
   });
-  els.description.addEventListener('input', (e) => {
+
+  bind(els.description, 'input', (e) => {
     state.description = e.target.value;
     scheduleStyleRefresh();
   });
-  els.descriptionSize.addEventListener('input', (e) => {
+
+  bind(els.descriptionSize, 'input change', (e) => {
     state.descriptionFontWeight = Number(e.target.value);
-    els.descriptionSizeValue.textContent = String(state.descriptionFontWeight);
+    if (els.descriptionSizeValue) {
+      els.descriptionSizeValue.textContent = String(state.descriptionFontWeight);
+    }
     scheduleStyleRefresh();
   });
-  els.randomRotation.addEventListener('change', (e) => {
+
+  bind(els.randomRotation, 'change', (e) => {
     state.randomRotation = e.target.checked;
     if (state.imageSrcs.length) {
       applyRotations();
       scheduleStyleRefresh();
     }
   });
-  els.randomizeFigures.addEventListener('change', (e) => {
+
+  bind(els.randomizeFigures, 'change', (e) => {
     state.randomizeFigures = e.target.checked;
     schedulePreviewUpdate({ resample: true });
   });
-  els.randomColors.addEventListener('change', (e) => {
+
+  bind(els.randomColors, 'change', (e) => {
     setRandomColorsEnabled(e.target.checked);
   });
-  els.regenerate.addEventListener('click', () => {
+
+  bind(els.regenerate, 'click', () => {
     updatePreview({ resample: true, loading: true }).catch(reportError);
   });
-  els.exportPng.addEventListener('click', () => downloadPng(els.preview, state.formatId));
-  els.exportJpg.addEventListener('click', () => downloadJpg(els.preview, state.formatId));
-  els.exportPdf.addEventListener('click', () => downloadPdf(els.preview, state.formatId, getFormat(state.formatId)));
+
+  bind(els.exportPng, 'click', () => downloadPng(els.preview, state.formatId));
+  bind(els.exportJpg, 'click', () => downloadJpg(els.preview, state.formatId));
+  bind(els.exportPdf, 'click', () => downloadPdf(els.preview, state.formatId, getFormat(state.formatId)));
 
   updateButtons();
   updateColorOptionsVisibility();
