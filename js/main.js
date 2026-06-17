@@ -395,6 +395,7 @@ function schedulePreviewUpdate(options = {}) {
 }
 
 function scheduleStyleRefresh() {
+  clearSvgCache();
   schedulePreviewUpdate({ resample: false });
 }
 

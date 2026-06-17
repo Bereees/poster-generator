@@ -364,11 +364,13 @@ function prepareNecropoliSvg(svgText, color) {
   doc.querySelectorAll(shapeTags.join(',')).forEach((el) => {
     const style = resolveElementStyle(el, classStyles);
     el.removeAttribute('class');
+    el.removeAttribute('style');
 
     const hasStroke = style.stroke && style.stroke !== 'none';
     const hasFill = style.fill && style.fill !== 'none';
+    const usesDefaultFill = style.fill === undefined && style.stroke === undefined;
 
-    if (hasFill) {
+    if (hasFill || usesDefaultFill) {
       el.setAttribute('fill', color);
     } else {
       el.setAttribute('fill', 'none');
