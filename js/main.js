@@ -38,6 +38,7 @@ const state = {
   randomizeFigures: true,
   scacchiOutline: false,
   scacchiStrokeWeight: 50,
+  stemmiStrokeWeight: 100,
   randomColorsEnabled: false,
   randomColors: null,
   imageSrcs: [],
@@ -74,6 +75,9 @@ const els = {
   scacchiStroke: document.getElementById('scacchi-stroke'),
   scacchiStrokeValue: document.getElementById('scacchi-stroke-value'),
   scacchiStrokeField: document.getElementById('scacchi-stroke-field'),
+  stemmiStroke: document.getElementById('stemmi-stroke'),
+  stemmiStrokeValue: document.getElementById('stemmi-stroke-value'),
+  stemmiStrokeField: document.getElementById('stemmi-stroke-field'),
   randomColorsSection: document.getElementById('random-colors-section'),
   randomColors: document.getElementById('random-colors'),
 };
@@ -275,6 +279,7 @@ function hasElementColorControl(selectedCategories) {
 
 function updateColorOptionsVisibility() {
   const hasScacchi = hasScacchiCategory(state.selectedCategories);
+  const hasStemmi = hasStemmiCategory(state.selectedCategories);
   const hasElementColor = hasElementColorControl(state.selectedCategories);
   const randomOn = state.randomColorsEnabled;
 
@@ -286,6 +291,9 @@ function updateColorOptionsVisibility() {
   }
   if (els.scacchiStrokeField) {
     els.scacchiStrokeField.hidden = !hasScacchi || !els.scacchiOutline?.checked;
+  }
+  if (els.stemmiStrokeField) {
+    els.stemmiStrokeField.hidden = !hasStemmi;
   }
   if (els.randomColorsSection) {
     els.randomColorsSection.hidden = !hasElementColor;
@@ -331,6 +339,7 @@ function getScacchiRenderOptions() {
     outline: hasScacchiCategory(state.selectedCategories) && state.scacchiOutline,
     color: state.elementColor,
     strokeWeight: state.scacchiStrokeWeight,
+    stemmiStrokeWeight: state.stemmiStrokeWeight,
   };
 }
 
@@ -492,6 +501,14 @@ async function init() {
       els.scacchiStrokeValue.textContent = String(state.scacchiStrokeWeight);
     }
     if (state.scacchiOutline) scheduleStyleRefresh();
+  });
+
+  bind(els.stemmiStroke, 'input change', (e) => {
+    state.stemmiStrokeWeight = Number(e.target.value);
+    if (els.stemmiStrokeValue) {
+      els.stemmiStrokeValue.textContent = String(state.stemmiStrokeWeight);
+    }
+    if (hasStemmiCategory(state.selectedCategories)) scheduleStyleRefresh();
   });
 
   bind(els.adaptiveFooter, 'change', (e) => {

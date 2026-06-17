@@ -309,6 +309,12 @@ function normalizeStrokeWidth(value) {
   return String(value).replace(/px$/i, '').trim() || '0.5';
 }
 
+function scaleStrokeWidth(value, weightPercent = 100) {
+  const base = parseFloat(normalizeStrokeWidth(value));
+  if (!Number.isFinite(base)) return normalizeStrokeWidth(value);
+  return String(base * (weightPercent / 100));
+}
+
 function parseSvgClassStyles(doc) {
   const classStyles = new Map();
 
@@ -368,7 +374,7 @@ function resolveElementStyle(el, classStyles) {
   return style;
 }
 
-function prepareStrokeSvg(svgText, color) {
+function prepareStrokeSvg(svgText, color, strokeWeight = 100) {
   const doc = new DOMParser().parseFromString(svgText, 'image/svg+xml');
   const svg = doc.documentElement;
   const viewBox = parseViewBox(svg);
@@ -392,7 +398,7 @@ function prepareStrokeSvg(svgText, color) {
     el.setAttribute('stroke-miterlimit', style['stroke-miterlimit'] || '10');
     el.setAttribute(
       'stroke-width',
-      normalizeStrokeWidth(style['stroke-width'] || el.getAttribute('stroke-width'))
+      scaleStrokeWidth(style['stroke-width'] || el.getAttribute('stroke-width'), strokeWeight)
     );
   });
 
@@ -624,15 +630,15 @@ async function loadArticoliAsset(src, color, loadImage) {
   return svgCache.get(cacheKey);
 }
 
-async function loadStemmiAsset(src, color, loadImage) {
-  const cacheKey = `${src}|stroke|${color}`;
+async function loadStemmiAsset(src, color, strokeWeight, loadImage) {
+  const cacheKey = `${src}|stroke|${color}|${strokeWeight}`;
   if (!svgCache.has(cacheKey)) {
     const promise = fetch(resolveAssetUrl(src), { cache: 'no-store' })
       .then((res) => {
         if (!res.ok) throw new Error(`SVG non trovato: ${src}`);
         return res.text();
       })
-      .then((text) => prepareStrokeSvg(text, color))
+      .then((text) => prepareStrokeSvg(text, color, strokeWeight))
       .then((svg) => svgTextToImage(svg));
     svgCache.set(cacheKey, promise);
   }
@@ -692,7 +698,7 @@ export async function loadScacchiAsset(src, options, loadImage) {
     return loadPoesieAsset(src, options.color, loadImage);
   }
   if (isStemmiSrc(src)) {
-    return loadStemmiAsset(src, options.color, loadImage);
+    return loadStemmiAsset(src, options.color, options.stemmiStrokeWeight ?? 100, loadImage);
   }
   if (isNecropoliFamilySrc(src)) {
     return loadNecropoliAsset(src, options.color, loadImage);
