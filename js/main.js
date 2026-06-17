@@ -15,7 +15,6 @@ import {
   hasStemmiCategory,
   hasArticoliCategory,
   hasVectorCategory,
-  isVectorCategoryOnly,
   getVectorGapPx,
   getVectorFitScale,
   clearSvgCache,
@@ -29,16 +28,14 @@ const state = {
   gridId: '5x7',
   selectedCategories: new Set(),
   backgroundColor: '#ffffff',
-  tintColor: '#1a1a1a',
+  elementColor: '#1a1a1a',
   adaptiveFooter: false,
   description: '',
   descriptionFontWeight: 50,
   randomRotation: false,
   randomizeFigures: true,
   scacchiOutline: false,
-  scacchiColor: '#1a1a1a',
   scacchiStrokeWeight: 50,
-  elementColor: '#1a1a1a',
   randomColorsEnabled: false,
   randomColors: null,
   imageSrcs: [],
@@ -54,7 +51,8 @@ const els = {
   grids: document.getElementById('grids'),
   gridSelection: document.getElementById('grid-selection'),
   background: document.getElementById('background'),
-  tintColor: document.getElementById('tint-color'),
+  elementColorSection: document.getElementById('element-color-section'),
+  elementColor: document.getElementById('element-color'),
   adaptiveFooter: document.getElementById('adaptive-footer'),
   description: document.getElementById('description'),
   descriptionSize: document.getElementById('description-size'),
@@ -69,16 +67,11 @@ const els = {
   previewPlaceholder: document.getElementById('preview-placeholder'),
   loadingSpinner: document.getElementById('loading-spinner'),
   themeToggle: document.getElementById('theme-toggle'),
-  scacchiColorSection: document.getElementById('scacchi-color-section'),
   scacchiOutlineOptions: document.getElementById('scacchi-outline-options'),
   scacchiOutline: document.getElementById('scacchi-outline'),
-  scacchiColor: document.getElementById('scacchi-color'),
-  elementColorSection: document.getElementById('element-color-section'),
-  elementColor: document.getElementById('element-color'),
   scacchiStroke: document.getElementById('scacchi-stroke'),
   scacchiStrokeValue: document.getElementById('scacchi-stroke-value'),
   scacchiStrokeField: document.getElementById('scacchi-stroke-field'),
-  tintSection: document.getElementById('tint-section'),
   randomColorsSection: document.getElementById('random-colors-section'),
   randomColors: document.getElementById('random-colors'),
 };
@@ -168,10 +161,8 @@ function renderCategoryControls() {
     input.value = cat.id;
     input.disabled = empty;
     input.addEventListener('change', () => {
-      const wasMulti = isMultiCategory(state.selectedCategories);
       if (input.checked) state.selectedCategories.add(cat.id);
       else state.selectedCategories.delete(cat.id);
-      syncUnifiedColorOnEnterMulti(wasMulti);
       clearRandomColors();
       updateCategoriesSummary();
       updateColorOptionsVisibility();
@@ -252,49 +243,26 @@ function hasDisegniCategory(selectedCategories) {
   return selectedCategories.has('disegni');
 }
 
-function isMultiCategory(selectedCategories) {
-  return selectedCategories.size > 1;
-}
-
-function syncUnifiedColorOnEnterMulti(wasMulti) {
-  if (wasMulti || !isMultiCategory(state.selectedCategories)) return;
-
-  const hasDisegni = hasDisegniCategory(state.selectedCategories);
-
-  if (hasDisegni && !hasVectorCategory(state.selectedCategories)) {
-    state.elementColor = state.tintColor;
-  } else if (hasVectorCategory(state.selectedCategories)) {
-    state.elementColor = state.scacchiColor;
-  }
-
-  els.elementColor.value = state.elementColor;
+function hasElementColorControl(selectedCategories) {
+  return (
+    hasDisegniCategory(selectedCategories) ||
+    hasScacchiCategory(selectedCategories) ||
+    hasNecropoliCategory(selectedCategories) ||
+    hasPoesieCategory(selectedCategories) ||
+    hasStemmiCategory(selectedCategories) ||
+    hasArticoliCategory(selectedCategories)
+  );
 }
 
 function updateColorOptionsVisibility() {
   const hasScacchi = hasScacchiCategory(state.selectedCategories);
-  const hasDisegni = hasDisegniCategory(state.selectedCategories);
-  const multi = isMultiCategory(state.selectedCategories);
-  const vectorOnly = isVectorCategoryOnly(state.selectedCategories);
-  const disegniOnly = state.selectedCategories.size === 1 && hasDisegni;
+  const hasElementColor = hasElementColorControl(state.selectedCategories);
+  const randomOn = state.randomColorsEnabled;
 
-  els.elementColorSection.hidden = !multi;
-  els.tintSection.hidden = multi || !disegniOnly;
-  els.scacchiColorSection.hidden = multi || !vectorOnly;
+  els.elementColorSection.hidden = !hasElementColor;
   els.scacchiOutlineOptions.hidden = !hasScacchi;
   els.scacchiStrokeField.hidden = !hasScacchi || !els.scacchiOutline.checked;
-
-  const hasColorable =
-    hasScacchi ||
-    hasNecropoliCategory(state.selectedCategories) ||
-    hasPoesieCategory(state.selectedCategories) ||
-    hasStemmiCategory(state.selectedCategories) ||
-    hasArticoliCategory(state.selectedCategories) ||
-    hasDisegni;
-  const randomOn = state.randomColorsEnabled;
-  els.randomColorsSection.hidden = !hasColorable;
-
-  els.tintColor.disabled = randomOn;
-  els.scacchiColor.disabled = randomOn;
+  els.randomColorsSection.hidden = !hasElementColor;
   els.elementColor.disabled = randomOn;
 }
 
@@ -330,31 +298,22 @@ function getLayoutOptions() {
 
 function getScacchiRenderOptions() {
   if (!hasVectorCategory(state.selectedCategories)) return null;
-  const multi = isMultiCategory(state.selectedCategories);
   return {
     outline: hasScacchiCategory(state.selectedCategories) && state.scacchiOutline,
-    color: multi ? state.elementColor : state.scacchiColor,
+    color: state.elementColor,
     strokeWeight: state.scacchiStrokeWeight,
   };
 }
 
 function getRenderOptions() {
   const hasDisegni = hasDisegniCategory(state.selectedCategories);
-  const multi = isMultiCategory(state.selectedCategories);
-
-  let tintColor = null;
-  if (multi && hasDisegni) {
-    tintColor = state.elementColor;
-  } else if (!hasVectorCategory(state.selectedCategories) && hasDisegni) {
-    tintColor = state.tintColor;
-  }
 
   return {
     backgroundColor: state.backgroundColor,
     description: state.description,
     logoSrc: state.manifest.logo,
     rotations: state.imageRotations,
-    tintColor,
+    tintColor: hasDisegni ? state.elementColor : null,
     adaptiveFooter: state.adaptiveFooter,
     scacchi: getScacchiRenderOptions(),
     scacchiFitScale: hasVectorCategory(state.selectedCategories)
@@ -483,10 +442,6 @@ async function init() {
     state.backgroundColor = e.target.value;
     scheduleStyleRefresh();
   });
-  els.tintColor.addEventListener('input', (e) => {
-    state.tintColor = e.target.value;
-    scheduleStyleRefresh();
-  });
   els.elementColor.addEventListener('input', (e) => {
     state.elementColor = e.target.value;
     scheduleStyleRefresh();
@@ -494,10 +449,6 @@ async function init() {
   els.scacchiOutline.addEventListener('change', (e) => {
     state.scacchiOutline = e.target.checked;
     updateColorOptionsVisibility();
-    scheduleStyleRefresh();
-  });
-  els.scacchiColor.addEventListener('input', (e) => {
-    state.scacchiColor = e.target.value;
     scheduleStyleRefresh();
   });
   els.scacchiStroke.addEventListener('input', (e) => {

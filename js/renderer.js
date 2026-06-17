@@ -23,16 +23,19 @@ export function clearImageCache() {
 }
 
 export function loadImage(src) {
-  const cacheKey = assetVersion ? `${src}|${assetVersion}` : src;
+  const isTransient = /^(blob:|data:)/i.test(src);
+  const cacheKey = isTransient ? src : assetVersion ? `${src}|${assetVersion}` : src;
   if (imageCache.has(cacheKey)) return imageCache.get(cacheKey);
   const promise = new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve(img);
     img.onerror = () => reject(new Error(`Failed to load: ${src}`));
     const url = resolveAssetUrl(src);
-    img.src = assetVersion
-      ? `${url}${url.includes('?') ? '&' : '?'}v=${encodeURIComponent(assetVersion)}`
-      : url;
+    if (isTransient || !assetVersion) {
+      img.src = url;
+    } else {
+      img.src = `${url}${url.includes('?') ? '&' : '?'}v=${encodeURIComponent(assetVersion)}`;
+    }
   });
   imageCache.set(cacheKey, promise);
   return promise;

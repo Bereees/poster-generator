@@ -446,11 +446,18 @@ function tintImage(source, color) {
   return canvas;
 }
 
-async function svgTextToImage(svgText, loadImage) {
+async function svgTextToImage(svgText) {
   const blob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   try {
-    return await loadImage(url);
+    const img = await new Promise((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = () => reject(new Error('Failed to load SVG'));
+      image.src = url;
+    });
+    if (img.decode) await img.decode();
+    return img;
   } finally {
     URL.revokeObjectURL(url);
   }
@@ -465,7 +472,7 @@ async function loadOutlineBase(src, strokeWeight, loadImage) {
         return res.text();
       })
       .then((text) => prepareOutlineSvg(text, strokeWeight))
-      .then((svg) => svgTextToImage(svg, loadImage));
+      .then((svg) => svgTextToImage(svg));
     svgCache.set(cacheKey, promise);
   }
   return svgCache.get(cacheKey);
@@ -480,7 +487,7 @@ async function loadPoesieAsset(src, color, loadImage) {
         return res.text();
       })
       .then((text) => prepareTextSvg(text, color))
-      .then((svg) => svgTextToImage(svg, loadImage));
+      .then((svg) => svgTextToImage(svg));
     svgCache.set(cacheKey, promise);
   }
   return svgCache.get(cacheKey);
@@ -495,7 +502,7 @@ async function loadArticoliAsset(src, color, loadImage) {
         return res.text();
       })
       .then((text) => prepareArticoliFillSvg(text, color))
-      .then((svg) => svgTextToImage(svg, loadImage));
+      .then((svg) => svgTextToImage(svg));
     svgCache.set(cacheKey, promise);
   }
   return svgCache.get(cacheKey);
@@ -510,7 +517,7 @@ async function loadStemmiAsset(src, color, loadImage) {
         return res.text();
       })
       .then((text) => prepareStrokeSvg(text, color))
-      .then((svg) => svgTextToImage(svg, loadImage));
+      .then((svg) => svgTextToImage(svg));
     svgCache.set(cacheKey, promise);
   }
   return svgCache.get(cacheKey);
@@ -525,7 +532,7 @@ async function loadNecropoliAsset(src, color, loadImage) {
         return res.text();
       })
       .then((text) => prepareNecropoliSvg(text, color))
-      .then((svg) => svgTextToImage(svg, loadImage));
+      .then((svg) => svgTextToImage(svg));
     svgCache.set(cacheKey, promise);
   }
   return svgCache.get(cacheKey);
@@ -540,7 +547,7 @@ async function loadFillAsset(src, color, loadImage) {
         return res.text();
       })
       .then((text) => prepareFillSvg(text, color))
-      .then((svg) => svgTextToImage(svg, loadImage));
+      .then((svg) => svgTextToImage(svg));
     svgCache.set(cacheKey, promise);
   }
   return svgCache.get(cacheKey);
