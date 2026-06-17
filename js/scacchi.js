@@ -494,7 +494,7 @@ function prepareFillSvg(svgText, color) {
   return new XMLSerializer().serializeToString(svg);
 }
 
-function prepareScacchiComplessiFillSvg(svgText, color) {
+function prepareScacchiComplessiFillSvg(svgText, color, src = '') {
   const doc = new DOMParser().parseFromString(svgText, 'image/svg+xml');
   const svg = doc.documentElement;
 
@@ -506,7 +506,8 @@ function prepareScacchiComplessiFillSvg(svgText, color) {
     el.setAttribute('stroke', 'none');
   });
 
-  const viewBox = normalizeSvgViewBoxToContent(svg) ?? parseViewBox(svg);
+  const keepViewBox = src.includes('scaccomarinore.svg');
+  const viewBox = (!keepViewBox && normalizeSvgViewBoxToContent(svg)) || parseViewBox(svg);
   setSvgRenderSize(svg, viewBox);
   return new XMLSerializer().serializeToString(svg);
 }
@@ -676,7 +677,7 @@ async function loadScacchiComplessiAsset(src, color, loadImage) {
         if (!res.ok) throw new Error(`SVG non trovato: ${src}`);
         return res.text();
       })
-      .then((text) => prepareScacchiComplessiFillSvg(text, color))
+      .then((text) => prepareScacchiComplessiFillSvg(text, color, src))
       .then((svg) => svgTextToImage(svg));
     svgCache.set(cacheKey, promise);
   }
