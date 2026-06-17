@@ -22,6 +22,12 @@ export function getSimilarityGroup(src) {
     return name;
   }
 
+  if (src.includes('immagini/disegni/')) {
+    const match = name.match(/^disegno(\d+)/);
+    if (match) return `disegno-${match[1]}`;
+    return name;
+  }
+
   return src;
 }
 

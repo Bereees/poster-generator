@@ -6,6 +6,12 @@ import { resolveAssetUrl } from './assets.js';
 
 const imageCache = new Map();
 const POSTER_FONT = 'Roboto';
+let assetVersion = '';
+
+export function setAssetVersion(version) {
+  assetVersion = version || '';
+  clearImageCache();
+}
 
 async function ensurePosterFont(fontSize) {
   if (!document.fonts) return;
@@ -17,14 +23,18 @@ export function clearImageCache() {
 }
 
 export function loadImage(src) {
-  if (imageCache.has(src)) return imageCache.get(src);
+  const cacheKey = assetVersion ? `${src}|${assetVersion}` : src;
+  if (imageCache.has(cacheKey)) return imageCache.get(cacheKey);
   const promise = new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve(img);
     img.onerror = () => reject(new Error(`Failed to load: ${src}`));
-    img.src = resolveAssetUrl(src);
+    const url = resolveAssetUrl(src);
+    img.src = assetVersion
+      ? `${url}${url.includes('?') ? '&' : '?'}v=${encodeURIComponent(assetVersion)}`
+      : url;
   });
-  imageCache.set(src, promise);
+  imageCache.set(cacheKey, promise);
   return promise;
 }
 

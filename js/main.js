@@ -2,7 +2,7 @@ import { FORMATS, getFormat } from './formats.js';
 import { GRIDS, getGrid, getCellCount } from './grids.js';
 import { buildImagePool, sampleImages } from './sampler.js';
 import { computeLayout } from './layout.js';
-import { renderPoster, clearImageCache } from './renderer.js';
+import { renderPoster, clearImageCache, setAssetVersion } from './renderer.js';
 import { downloadPng, downloadJpg, downloadPdf } from './export.js';
 import { initThemeToggle } from './theme.js';
 import { getCategoryLogo } from './categoryLogos.js';
@@ -468,9 +468,10 @@ function reportError(err) {
 }
 
 async function init() {
-  const res = await fetch('manifest.json');
+  const res = await fetch('manifest.json', { cache: 'no-store' });
   if (!res.ok) throw new Error('manifest.json non trovato. Esegui: node scripts/generate-manifest.mjs');
   state.manifest = await res.json();
+  setAssetVersion(state.manifest.generatedAt);
 
   renderCategoryControls();
   renderFormatControls();
