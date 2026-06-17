@@ -8,6 +8,7 @@ const OUT = join(ROOT, 'manifest.json');
 const IMAGE_EXT = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg']);
 const CATEGORY_LABELS = {
   scacchicomplessi: 'Scacchi complessi',
+  necropolilogo: 'Necropoli logo',
 };
 
 async function listImages(dir) {
@@ -33,7 +34,16 @@ async function main() {
   }
 
   categories.sort((a, b) => {
-    const order = ['articoli', 'disegni', 'stemmi', 'necropoli', 'poesie', 'scacchi', 'scacchicomplessi'];
+    const order = [
+      'articoli',
+      'disegni',
+      'stemmi',
+      'necropoli',
+      'necropolilogo',
+      'poesie',
+      'scacchi',
+      'scacchicomplessi',
+    ];
     const aIndex = order.indexOf(a.id);
     const bIndex = order.indexOf(b.id);
     const aOrder = aIndex === -1 ? Number.MAX_SAFE_INTEGER : aIndex;

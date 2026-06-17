@@ -7,7 +7,16 @@ const svgCache = new Map();
 export function clearSvgCache() {
   svgCache.clear();
 }
-const VECTOR_CATEGORY_IDS = new Set(['scacchi', 'scacchicomplessi', 'necropoli', 'poesie', 'stemmi', 'articoli']);
+const VECTOR_CATEGORY_IDS = new Set([
+  'scacchi',
+  'scacchicomplessi',
+  'necropoli',
+  'necropolilogo',
+  'poesie',
+  'stemmi',
+  'articoli',
+]);
+const SHAPE_SELECTOR = 'path, polyline, polygon, line, circle, ellipse, rect';
 
 export function isVectorCategorySrc(src) {
   for (const id of VECTOR_CATEGORY_IDS) {
@@ -38,6 +47,22 @@ export function hasChessLikeCategory(selectedCategories) {
 
 export function isNecropoliSrc(src) {
   return src.includes('immagini/necropoli/');
+}
+
+export function isNecropolilogoSrc(src) {
+  return src.includes('immagini/necropolilogo/');
+}
+
+export function isNecropoliFamilySrc(src) {
+  return isNecropoliSrc(src) || isNecropolilogoSrc(src);
+}
+
+export function isNecropolilogoOnly(selectedCategories) {
+  return selectedCategories.size === 1 && selectedCategories.has('necropolilogo');
+}
+
+export function hasNecropolilogoCategory(selectedCategories) {
+  return selectedCategories.has('necropolilogo');
 }
 
 export function isPoesieSrc(src) {
@@ -176,6 +201,61 @@ function setSvgRenderSize(svg, viewBox) {
   const scale = Math.max(1, RENDER_MIN_PX / viewBox.minDim);
   svg.setAttribute('width', String(Math.round(viewBox.width * scale)));
   svg.setAttribute('height', String(Math.round(viewBox.height * scale)));
+}
+
+function measureSvgContentBounds(svg) {
+  if (typeof document === 'undefined') return null;
+
+  const host = document.createElement('div');
+  host.setAttribute('aria-hidden', 'true');
+  host.style.cssText = 'position:fixed;left:-10000px;top:0;width:0;height:0;overflow:hidden;';
+  host.appendChild(svg.cloneNode(true));
+  document.body.appendChild(host);
+
+  try {
+    const shapes = host.querySelectorAll(SHAPE_SELECTOR);
+    if (!shapes.length) return null;
+
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+
+    shapes.forEach((el) => {
+      if (typeof el.getBBox !== 'function') return;
+      const box = el.getBBox();
+      if (!Number.isFinite(box.width) || !Number.isFinite(box.height)) return;
+      if (box.width === 0 && box.height === 0) return;
+      minX = Math.min(minX, box.x);
+      minY = Math.min(minY, box.y);
+      maxX = Math.max(maxX, box.x + box.width);
+      maxY = Math.max(maxY, box.y + box.height);
+    });
+
+    if (!Number.isFinite(minX)) return null;
+    return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+  } finally {
+    host.remove();
+  }
+}
+
+function normalizeSvgViewBoxToContent(svg, paddingRatio = 0.06) {
+  const bounds = measureSvgContentBounds(svg);
+  if (!bounds || bounds.width <= 0 || bounds.height <= 0) return null;
+
+  const pad = Math.max(bounds.width, bounds.height) * paddingRatio;
+  const viewBox = {
+    x: bounds.x - pad,
+    y: bounds.y - pad,
+    width: bounds.width + pad * 2,
+    height: bounds.height + pad * 2,
+    minDim: Math.min(bounds.width + pad * 2, bounds.height + pad * 2),
+  };
+
+  svg.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`);
+  svg.removeAttribute('width');
+  svg.removeAttribute('height');
+  return viewBox;
 }
 
 function applyPoetryTextColor(el, color) {
@@ -414,6 +494,23 @@ function prepareFillSvg(svgText, color) {
   return new XMLSerializer().serializeToString(svg);
 }
 
+function prepareScacchiComplessiFillSvg(svgText, color) {
+  const doc = new DOMParser().parseFromString(svgText, 'image/svg+xml');
+  const svg = doc.documentElement;
+
+  doc.querySelectorAll('style').forEach((node) => node.remove());
+  doc.querySelectorAll(SHAPE_SELECTOR).forEach((el) => {
+    el.removeAttribute('class');
+    el.removeAttribute('style');
+    el.setAttribute('fill', color);
+    el.setAttribute('stroke', 'none');
+  });
+
+  const viewBox = normalizeSvgViewBoxToContent(svg) ?? parseViewBox(svg);
+  setSvgRenderSize(svg, viewBox);
+  return new XMLSerializer().serializeToString(svg);
+}
+
 function prepareOutlineSvg(svgText, strokeWeight) {
   const doc = new DOMParser().parseFromString(svgText, 'image/svg+xml');
   const svg = doc.documentElement;
@@ -571,6 +668,21 @@ async function loadFillAsset(src, color, loadImage) {
   return svgCache.get(cacheKey);
 }
 
+async function loadScacchiComplessiAsset(src, color, loadImage) {
+  const cacheKey = `${src}|scacchi-complessi|${color}`;
+  if (!svgCache.has(cacheKey)) {
+    const promise = fetch(resolveAssetUrl(src), { cache: 'no-store' })
+      .then((res) => {
+        if (!res.ok) throw new Error(`SVG non trovato: ${src}`);
+        return res.text();
+      })
+      .then((text) => prepareScacchiComplessiFillSvg(text, color))
+      .then((svg) => svgTextToImage(svg));
+    svgCache.set(cacheKey, promise);
+  }
+  return svgCache.get(cacheKey);
+}
+
 export async function loadScacchiAsset(src, options, loadImage) {
   if (isArticoliSrc(src)) {
     return loadArticoliAsset(src, options.color, loadImage);
@@ -581,8 +693,11 @@ export async function loadScacchiAsset(src, options, loadImage) {
   if (isStemmiSrc(src)) {
     return loadStemmiAsset(src, options.color, loadImage);
   }
-  if (isNecropoliSrc(src)) {
+  if (isNecropoliFamilySrc(src)) {
     return loadNecropoliAsset(src, options.color, loadImage);
+  }
+  if (isScacchiComplessiSrc(src)) {
+    return loadScacchiComplessiAsset(src, options.color, loadImage);
   }
   if (options.outline && isScacchiSrc(src)) {
     const base = await loadOutlineBase(src, options.strokeWeight, loadImage);
@@ -648,7 +763,7 @@ export function getVectorFitScale(selectedCategories, outline = false) {
   if (isScacchiComplessiOnly(selectedCategories)) return getScacchiFitScale(true, outline);
   if (hasVectorCategory(selectedCategories) && !isMultiCategorySet(selectedCategories)) {
     const id = [...selectedCategories][0];
-    if (id === 'necropoli') return 1;
+    if (id === 'necropoli' || id === 'necropolilogo') return 1;
     if (id === 'articoli') return ARTICOLI_FIT_SCALE;
     if (id === 'poesie') return POESIE_FIT_SCALE;
     if (id === 'stemmi') return STEMMI_FIT_SCALE;

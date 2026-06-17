@@ -3,6 +3,7 @@ export const CATEGORY_DISPLAY_ORDER = [
   'disegni',
   'stemmi',
   'necropoli',
+  'necropolilogo',
   'poesie',
   'scacchi',
   'scacchicomplessi',

@@ -12,6 +12,7 @@ import {
   hasScacchiCategory,
   hasScacchiComplessiCategory,
   hasNecropoliCategory,
+  hasNecropolilogoCategory,
   hasPoesieCategory,
   hasStemmiCategory,
   hasArticoliCategory,
@@ -265,6 +266,7 @@ function hasElementColorControl(selectedCategories) {
     hasScacchiCategory(selectedCategories) ||
     hasScacchiComplessiCategory(selectedCategories) ||
     hasNecropoliCategory(selectedCategories) ||
+    hasNecropolilogoCategory(selectedCategories) ||
     hasPoesieCategory(selectedCategories) ||
     hasStemmiCategory(selectedCategories) ||
     hasArticoliCategory(selectedCategories)

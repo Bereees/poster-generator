@@ -76,11 +76,17 @@
       "id": "necropoli",
       "label": "Necropoli",
       "images": [
-        "immagini/necropoli/ipogeodef.svg",
         "immagini/necropoli/Mappa 1.1.svg",
         "immagini/necropoli/Mappa 1.2.svg",
         "immagini/necropoli/Mappa 2.1.svg",
         "immagini/necropoli/Mappa 2.2.svg"
+      ]
+    },
+    {
+      "id": "necropolilogo",
+      "label": "Necropoli logo",
+      "images": [
+        "immagini/necropolilogo/ipogeodef.svg"
       ]
     },
     {
@@ -118,5 +124,5 @@
       ]
     }
   ],
-  "generatedAt": "2026-06-17T11:20:40.353Z"
+  "generatedAt": "2026-06-17T11:45:16.948Z"
 }
