@@ -39,6 +39,7 @@ const state = {
   scacchiOutline: false,
   scacchiStrokeWeight: 50,
   stemmiStrokeWeight: 100,
+  necropoliStrokeWeight: 100,
   randomColorsEnabled: false,
   randomColors: null,
   imageSrcs: [],
@@ -78,6 +79,9 @@ const els = {
   stemmiStroke: document.getElementById('stemmi-stroke'),
   stemmiStrokeValue: document.getElementById('stemmi-stroke-value'),
   stemmiStrokeField: document.getElementById('stemmi-stroke-field'),
+  necropoliStroke: document.getElementById('necropoli-stroke'),
+  necropoliStrokeValue: document.getElementById('necropoli-stroke-value'),
+  necropoliStrokeField: document.getElementById('necropoli-stroke-field'),
   randomColorsSection: document.getElementById('random-colors-section'),
   randomColors: document.getElementById('random-colors'),
 };
@@ -277,9 +281,14 @@ function hasElementColorControl(selectedCategories) {
   );
 }
 
+function hasNecropoliFamilyCategory(selectedCategories) {
+  return hasNecropoliCategory(selectedCategories) || hasNecropolilogoCategory(selectedCategories);
+}
+
 function updateColorOptionsVisibility() {
   const hasScacchi = hasScacchiCategory(state.selectedCategories);
   const hasStemmi = hasStemmiCategory(state.selectedCategories);
+  const hasNecropoliFamily = hasNecropoliFamilyCategory(state.selectedCategories);
   const hasElementColor = hasElementColorControl(state.selectedCategories);
   const randomOn = state.randomColorsEnabled;
 
@@ -294,6 +303,9 @@ function updateColorOptionsVisibility() {
   }
   if (els.stemmiStrokeField) {
     els.stemmiStrokeField.hidden = !hasStemmi;
+  }
+  if (els.necropoliStrokeField) {
+    els.necropoliStrokeField.hidden = !hasNecropoliFamily;
   }
   if (els.randomColorsSection) {
     els.randomColorsSection.hidden = !hasElementColor;
@@ -340,6 +352,7 @@ function getScacchiRenderOptions() {
     color: state.elementColor,
     strokeWeight: state.scacchiStrokeWeight,
     stemmiStrokeWeight: state.stemmiStrokeWeight,
+    necropoliStrokeWeight: state.necropoliStrokeWeight,
   };
 }
 
@@ -509,6 +522,14 @@ async function init() {
       els.stemmiStrokeValue.textContent = String(state.stemmiStrokeWeight);
     }
     if (hasStemmiCategory(state.selectedCategories)) scheduleStyleRefresh();
+  });
+
+  bind(els.necropoliStroke, 'input change', (e) => {
+    state.necropoliStrokeWeight = Number(e.target.value);
+    if (els.necropoliStrokeValue) {
+      els.necropoliStrokeValue.textContent = String(state.necropoliStrokeWeight);
+    }
+    if (hasNecropoliFamilyCategory(state.selectedCategories)) scheduleStyleRefresh();
   });
 
   bind(els.adaptiveFooter, 'change', (e) => {

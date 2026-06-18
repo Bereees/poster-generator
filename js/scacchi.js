@@ -438,7 +438,7 @@ function prepareArticoliFillSvg(svgText, color) {
   return new XMLSerializer().serializeToString(svg);
 }
 
-function prepareNecropoliSvg(svgText, color) {
+function prepareNecropoliSvg(svgText, color, strokeWeight = 100) {
   const doc = new DOMParser().parseFromString(svgText, 'image/svg+xml');
   const svg = doc.documentElement;
   const viewBox = parseViewBox(svg);
@@ -467,7 +467,7 @@ function prepareNecropoliSvg(svgText, color) {
       el.setAttribute('stroke-miterlimit', style['stroke-miterlimit'] || '10');
       el.setAttribute(
         'stroke-width',
-        normalizeStrokeWidth(style['stroke-width'] || el.getAttribute('stroke-width'))
+        scaleStrokeWidth(style['stroke-width'] || el.getAttribute('stroke-width'), strokeWeight)
       );
       if (style['stroke-dasharray']) {
         el.setAttribute('stroke-dasharray', style['stroke-dasharray']);
@@ -645,15 +645,15 @@ async function loadStemmiAsset(src, color, strokeWeight, loadImage) {
   return svgCache.get(cacheKey);
 }
 
-async function loadNecropoliAsset(src, color, loadImage) {
-  const cacheKey = `${src}|necropoli|${color}`;
+async function loadNecropoliAsset(src, color, strokeWeight, loadImage) {
+  const cacheKey = `${src}|necropoli|${color}|${strokeWeight}`;
   if (!svgCache.has(cacheKey)) {
     const promise = fetch(resolveAssetUrl(src), { cache: 'no-store' })
       .then((res) => {
         if (!res.ok) throw new Error(`SVG non trovato: ${src}`);
         return res.text();
       })
-      .then((text) => prepareNecropoliSvg(text, color))
+      .then((text) => prepareNecropoliSvg(text, color, strokeWeight))
       .then((svg) => svgTextToImage(svg));
     svgCache.set(cacheKey, promise);
   }
@@ -701,7 +701,7 @@ export async function loadScacchiAsset(src, options, loadImage) {
     return loadStemmiAsset(src, options.color, options.stemmiStrokeWeight ?? 100, loadImage);
   }
   if (isNecropoliFamilySrc(src)) {
-    return loadNecropoliAsset(src, options.color, loadImage);
+    return loadNecropoliAsset(src, options.color, options.necropoliStrokeWeight ?? 100, loadImage);
   }
   if (isScacchiComplessiSrc(src)) {
     return loadScacchiComplessiAsset(src, options.color, loadImage);
